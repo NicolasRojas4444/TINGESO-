@@ -1,0 +1,18 @@
+{
+  "realm": "siga",
+  "enabled": true,
+  "registrationAllowed": false,
+  "roles": {"realm": [{"name": "ADMIN"}, {"name": "TEACHER"}, {"name": "STUDENT"}]},
+  "clients": [
+    {
+      "clientId": "siga-frontend",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": ["${FRONTEND_URL}/*"],
+      "webOrigins": ["${FRONTEND_URL}"],
+      "attributes": {"pkce.code.challenge.method": "S256"},
+      "defaultClientScopes": ["basic", "web-origins", "acr", "profile", "roles", "email"]
+    }
+  ]
+}
