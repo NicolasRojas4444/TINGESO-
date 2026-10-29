@@ -3,13 +3,13 @@ package siga.ipt.backend.services;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import siga.ipt.backend.dtos.StudyPlanDto;
-import siga.ipt.backend.mappers.AcademicMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import siga.ipt.backend.dtos.StudyPlanDto;
 import siga.ipt.backend.entitys.DegreeProgram;
 import siga.ipt.backend.entitys.StudyPlan;
 import siga.ipt.backend.entitys.enums.PlanStatus;
+import siga.ipt.backend.mappers.AcademicMapper;
 import siga.ipt.backend.repositories.CourseRepository;
 import siga.ipt.backend.repositories.DegreeProgramRepository;
 import siga.ipt.backend.repositories.StudentRepository;
@@ -27,6 +27,51 @@ public class StudyPlanService {
     private final DegreeProgramRepository degreeProgramRepository;
     private final StudentRepository studentRepository;
     private final CourseRepository courseRepository;
+
+    public List<StudyPlanDto> getAll() {
+        currentUser.requireAcademicUser();
+        return getAllEntity().stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    public StudyPlanDto getById(Long id) {
+        currentUser.requireAcademicUser();
+        return mapper.toDto(getByIdEntity(id));
+    }
+
+    public List<StudyPlanDto> getByDegreeProgram(Long degreeProgramId) {
+        currentUser.requireAcademicUser();
+        return getByDegreeProgramEntity(degreeProgramId).stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public StudyPlanDto create(Long degreeProgramId, StudyPlanDto data) {
+        currentUser.requireRole("ADMIN");
+        StudyPlan studyPlan = createEntity(degreeProgramId, mapper.toInput(data));
+        return mapper.toDto(studyPlan);
+    }
+
+    @Transactional
+    public StudyPlanDto update(Long id, StudyPlanDto data) {
+        currentUser.requireRole("ADMIN");
+        StudyPlan studyPlan = updateEntity(id, mapper.toInput(data));
+        return mapper.toDto(studyPlan);
+    }
+
+    @Transactional
+    public StudyPlanDto setCurrent(Long id) {
+        currentUser.requireRole("ADMIN");
+        return mapper.toDto(setCurrentEntity(id));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        currentUser.requireRole("ADMIN");
+        deleteEntity(id);
+    }
 
     private List<StudyPlan> getAllEntity() {
         return studyPlanRepository.findAll();
@@ -93,8 +138,6 @@ public class StudyPlanService {
         StudyPlan studyPlan = getForUpdate(id);
         Long degreeProgramId = studyPlan.getDegreeProgram().getId();
 
-        getDegreeProgramForUpdate(degreeProgramId);
-
         String version = data.getVersion().trim();
 
         if (studyPlanRepository.existsByDegreeProgramIdAndVersionAndIdNot(
@@ -110,11 +153,6 @@ public class StudyPlanService {
 
     private StudyPlan setCurrentEntity(Long id) {
         StudyPlan studyPlan = getForUpdate(id);
-
-        getDegreeProgramForUpdate(
-                studyPlan.getDegreeProgram().getId()
-        );
-
         return replaceCurrentPlan(studyPlan);
     }
 
@@ -122,9 +160,6 @@ public class StudyPlanService {
     private void deleteEntity(Long id) {
         StudyPlan studyPlan = getForUpdate(id);
 
-        getDegreeProgramForUpdate(
-                studyPlan.getDegreeProgram().getId()
-        );
         if (studentRepository.existsByStudyPlanId(id)) {
             throw new IllegalStateException(
                     "A study plan with associated students cannot be deleted"
@@ -158,6 +193,20 @@ public class StudyPlanService {
     }
 
 
+    private StudyPlan getForUpdate(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("The study plan ID is required");
+        }
+
+        Long degreeProgramId = studyPlanRepository.findDegreeProgramIdById(id)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Study plan not found with ID: " + id
+                ));
+
+        getDegreeProgramForUpdate(degreeProgramId);
+        return getByIdEntity(id);
+    }
+
     private DegreeProgram getDegreeProgramForUpdate(Long id) {
         if (id == null) {
             throw new IllegalArgumentException(
@@ -187,54 +236,5 @@ public class StudyPlanService {
                     "The study plan version must not exceed 30 characters"
             );
         }
-    }
-
-    public List<StudyPlanDto> getAll() {
-        currentUser.requireAcademicUser();
-        return getAllEntity().stream().map(mapper::toDto).toList();
-    }
-
-    public StudyPlanDto getById(Long id) {
-        currentUser.requireAcademicUser();
-        return mapper.toDto(getByIdEntity(id));
-    }
-
-    public List<StudyPlanDto> getByDegreeProgram(Long degreeProgramId) {
-        currentUser.requireAcademicUser();
-        return getByDegreeProgramEntity(degreeProgramId).stream().map(mapper::toDto).toList();
-    }
-
-    @Transactional
-    public StudyPlanDto create(Long degreeProgramId, StudyPlanDto data) {
-        currentUser.requireRole("ADMIN");
-        return mapper.toDto(createEntity(degreeProgramId, mapper.toInput(data)));
-    }
-
-    @Transactional
-    public StudyPlanDto update(Long id, StudyPlanDto data) {
-        currentUser.requireRole("ADMIN");
-        return mapper.toDto(updateEntity(id, mapper.toInput(data)));
-    }
-
-    @Transactional
-    public StudyPlanDto setCurrent(Long id) {
-        currentUser.requireRole("ADMIN");
-        return mapper.toDto(setCurrentEntity(id));
-    }
-
-    @Transactional
-    public void delete(Long id) {
-        currentUser.requireRole("ADMIN");
-        deleteEntity(id);
-    }
-
-    private StudyPlan getForUpdate(Long id) {
-        if (id == null) {
-            throw new IllegalArgumentException("The study plan ID is required");
-        }
-        Long degreeProgramId = studyPlanRepository.findDegreeProgramIdById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Study plan not found with ID: " + id));
-        getDegreeProgramForUpdate(degreeProgramId);
-        return getByIdEntity(id);
     }
 }

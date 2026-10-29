@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import siga.ipt.backend.dtos.CourseRegistrationDto;
+import siga.ipt.backend.dtos.CourseSelectionRequest;
 import siga.ipt.backend.dtos.SectionDto;
 import siga.ipt.backend.entitys.AcademicPeriod;
 import siga.ipt.backend.entitys.AcademicRecord;
@@ -81,7 +82,7 @@ public class CourseRegistrationService {
         return eligibleSections(student, periodId, progress, current).stream()
                 .filter(section -> !current.contains(section.getId()))
                 .filter(section -> activeSections.stream().noneMatch(other -> overlaps(section, other)))
-                .map(mapper::toDto).toList();
+                .map(this::toSectionDto).toList();
     }
 
     @Transactional
@@ -146,6 +147,89 @@ public class CourseRegistrationService {
         return activeRegistrations(studentId, periodId).stream().map(mapper::toDto).toList();
     }
 
+    public List<SectionDto> getReplacementOptions(Long studentId, Long periodId) {
+        currentUser.requireStudentAccess(studentId);
+        Student student = requireStudent(studentId);
+        requirePeriod(periodId);
+        Set<Long> currentIds = new HashSet<>();
+        activeRegistrations(studentId, periodId).forEach(item -> currentIds.add(item.getSection().getId()));
+        // Include current sections and alternatives that overlap them; the final selection is validated on PUT.
+        return eligibleSections(student, periodId, progress(student), currentIds).stream()
+                .map(this::toSectionDto).toList();
+    }
+
+    @Transactional
+    public List<CourseRegistrationDto> replaceSelection(
+            Long studentId,
+            Long periodId,
+            CourseSelectionRequest request
+    ) {
+        currentUser.requireOwnStudent(studentId);
+        Student student = lockContext(studentId, periodId);
+        if (student.getAcademicStatus() != StudentStatus.REGULAR
+                || !enrollmentRepository.existsByStudentIdAndAcademicPeriodId(studentId, periodId)) {
+            throw new IllegalStateException("Replacing a selection requires a REGULAR enrolled student");
+        }
+        if (request == null || request.sectionIds() == null || request.sectionIds().isEmpty()
+                || request.sectionIds().size() > 6) {
+            throw new IllegalArgumentException("Provide the final selection of one to six sections");
+        }
+
+        List<CourseRegistration> existing = activeRegistrations(studentId, periodId);
+        Set<Long> existingIds = new HashSet<>();
+        existing.forEach(item -> existingIds.add(item.getSection().getId()));
+        Set<Long> desiredIds = new HashSet<>();
+        List<Section> desired = new ArrayList<>();
+        Progress progress = progress(student);
+
+        for (Long sectionId : request.sectionIds()) {
+            if (sectionId == null || !desiredIds.add(sectionId)) {
+                throw new IllegalArgumentException("Section IDs are required and cannot be duplicated");
+            }
+            Section section = requireSection(sectionId);
+            if (!section.getAcademicPeriod().getId().equals(periodId)
+                    || !section.getCourse().getStudyPlan().getId().equals(student.getStudyPlan().getId())) {
+                throw new IllegalArgumentException("Sections must belong to the student's plan and selected period");
+            }
+            if (!existingIds.contains(sectionId) && occupiedSeats(section) >= section.getCapacity()) {
+                throw new IllegalStateException("Section has no available seats: " + sectionId);
+            }
+            desired.add(section);
+        }
+
+        validateSelection(desired, eligibleSections(student, periodId, progress, existingIds), progress);
+
+        // No write occurs until the complete desired selection has passed every rule.
+        Instant changedAt = Instant.now();
+        for (CourseRegistration registration : existing) {
+            if (!desiredIds.contains(registration.getSection().getId())) {
+                finalGradeRepository.findByRegistrationId(registration.getId())
+                        .ifPresent(finalGradeRepository::delete);
+                registration.setStatus(RegistrationStatus.CANCELLED);
+                registration.setCancelledAt(changedAt);
+                registrationRepository.save(registration);
+            }
+        }
+        for (Section section : desired) {
+            if (!existingIds.contains(section.getId())) {
+                CourseRegistration registration = registrationRepository
+                        .findByStudentIdAndSectionId(studentId, section.getId())
+                        .orElseGet(CourseRegistration::new);
+                registration.setStudent(student);
+                registration.setSection(section);
+                registration.setStatus(RegistrationStatus.ACTIVE);
+                registration.setRegisteredAt(changedAt);
+                registration.setCancelledAt(null);
+                registrationRepository.save(registration);
+            }
+        }
+        return activeRegistrations(studentId, periodId).stream().map(mapper::toDto).toList();
+    }
+
+    private SectionDto toSectionDto(Section section) {
+        return mapper.toDto(section, occupiedSeats(section));
+    }
+
     @Transactional
     public CourseRegistrationDto cancel(Long registrationId) {
         requireId(registrationId, "registration");
@@ -164,15 +248,16 @@ public class CourseRegistrationService {
                 .filter(item -> !item.getId().equals(registrationId))
                 .map(CourseRegistration::getSection).toList();
         Progress progress = progress(student);
-        long pending = progress.curriculum().stream()
-                .filter(course -> !progress.approved().contains(course.getId())).count();
         Set<Long> currentSectionIds = new HashSet<>();
         activeRegistrations(studentId, periodId).forEach(item -> currentSectionIds.add(item.getSection().getId()));
-        int minimum = pending < 3
-                ? eligibleSections(student, periodId, progress, currentSectionIds).size() : 3;
+        List<Section> available = eligibleSections(student, periodId, progress, currentSectionIds);
+        int minimum = minimumCourseLoad(available, progress);
         if (remainingSelection.size() < minimum) {
             throw new IllegalStateException("Cancellation would leave fewer than " + minimum + " registered courses");
         }
+        // Cancellation must preserve load and semester priority, but must not revalidate
+        // unrelated existing prerequisites or schedules just to remove a course.
+        validateSemesterPriority(remainingSelection, available);
         finalGradeRepository.findByRegistrationId(registrationId).ifPresent(finalGradeRepository::delete);
         registration.setStatus(RegistrationStatus.CANCELLED);
         registration.setCancelledAt(Instant.now());
@@ -242,9 +327,7 @@ public class CourseRegistrationService {
     }
 
     private void validateSelection(List<Section> selection, List<Section> available, Progress progress) {
-        long remaining = progress.curriculum().stream()
-                .filter(course -> !progress.approved().contains(course.getId())).count();
-        int minimum = remaining < 3 ? available.size() : 3;
+        int minimum = minimumCourseLoad(available, progress);
         if (selection.size() < minimum || selection.size() > 6) {
             throw new IllegalArgumentException("The resulting course load must contain "
                     + minimum + " to six available courses");
@@ -263,6 +346,18 @@ public class CourseRegistrationService {
                 }
             }
         }
+        validateSemesterPriority(selection, available);
+    }
+
+    private int minimumCourseLoad(List<Section> available, Progress progress) {
+        long remaining = progress.curriculum().stream()
+                .filter(course -> !progress.approved().contains(course.getId())).count();
+        return remaining < 3 ? available.size() : 3;
+    }
+
+    private void validateSemesterPriority(List<Section> selection, List<Section> available) {
+        Set<Long> selectedCourses = new HashSet<>();
+        selection.forEach(section -> selectedCourses.add(section.getCourse().getId()));
         for (Section section : selection) {
             for (Section pending : available) {
                 if (pending.getCourse().getSemester() < section.getCourse().getSemester()

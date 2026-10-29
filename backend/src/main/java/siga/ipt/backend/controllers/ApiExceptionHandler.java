@@ -3,20 +3,23 @@ package siga.ipt.backend.controllers;
 import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.ConcurrencyFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.ErrorResponse;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import siga.ipt.backend.exceptions.IdentityProviderUnavailableException;
+import siga.ipt.backend.exceptions.IncompleteGradesException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
     private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     @ExceptionHandler(EntityNotFoundException.class)
@@ -29,9 +32,15 @@ public class ApiExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
-    @ExceptionHandler({HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class})
+    @ExceptionHandler({
+            HttpMessageNotReadableException.class,
+            MethodArgumentTypeMismatchException.class
+    })
     ProblemDetail invalidInput(Exception exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed request or invalid parameter");
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Malformed request or invalid parameter"
+        );
     }
 
     @ExceptionHandler(IllegalStateException.class)
@@ -39,10 +48,23 @@ public class ApiExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
-    @ExceptionHandler({DataIntegrityViolationException.class, ConcurrencyFailureException.class})
+    @ExceptionHandler(IncompleteGradesException.class)
+    ProblemDetail incompleteGrades(IncompleteGradesException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", "FINAL_GRADES_MISSING");
+        problem.setProperty("sectionIds", exception.getSectionIds());
+        return problem;
+    }
+
+    @ExceptionHandler({
+            DataIntegrityViolationException.class,
+            ConcurrencyFailureException.class
+    })
     ProblemDetail databaseConflict(Exception exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
-                "The operation conflicts with existing data or a concurrent change");
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                "The operation conflicts with existing data or a concurrent change"
+        );
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -52,7 +74,10 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     ProblemDetail unauthorized(AuthenticationException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "A valid access token is required");
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED,
+                "A valid access token is required"
+        );
     }
 
     @ExceptionHandler(Exception.class)
@@ -60,7 +85,17 @@ public class ApiExceptionHandler {
         if (exception instanceof ErrorResponse error) {
             return ProblemDetail.forStatusAndDetail(error.getStatusCode(), "Invalid HTTP request");
         }
+
         log.error("Unexpected API error", exception);
-        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
+
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected error occurred"
+        );
+    }
+
+    @ExceptionHandler(IdentityProviderUnavailableException.class)
+    ProblemDetail identityProviderUnavailable(IdentityProviderUnavailableException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
     }
 }

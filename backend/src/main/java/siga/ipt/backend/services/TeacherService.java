@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import siga.ipt.backend.dtos.TeacherDto;
+import siga.ipt.backend.dtos.SelfRegistrationRole;
 import siga.ipt.backend.mappers.AcademicMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,7 @@ public class TeacherService {
     private final AcademicMapper mapper;
     private final CurrentUserService currentUser;
     private final UserCleanupService userCleanup;
+    private final KeycloakRegistrationService keycloak;
 
     private final TeacherRepository teacherRepository;
     private final UserRepository userRepository;
@@ -44,7 +46,7 @@ public class TeacherService {
 
 
 
-    private Teacher createEntity(Teacher data) {
+    private Teacher createEntity(Teacher data, boolean verifyExistingAccount) {
         validateData(data);
 
         User userData = data.getUser();
@@ -64,6 +66,9 @@ public class TeacherService {
             throw new IllegalArgumentException(
                     "A user with this Keycloak subject already exists"
             );
+        }
+        if (verifyExistingAccount) {
+            keycloak.requireEnabledAccountRole(subject, SelfRegistrationRole.TEACHER);
         }
 
         User user = new User();
@@ -96,6 +101,8 @@ public class TeacherService {
         String email = normalizeEmail(userData.getEmail());
 
         validateUniqueIdentity(run, email, user.getId());
+
+        userCleanup.synchronizeIdentity(user, userData.getFullName().trim(), email);
 
         user.setRun(run);
         user.setFullName(userData.getFullName().trim());
@@ -147,7 +154,7 @@ public class TeacherService {
 
         teacherRepository.delete(teacher);
         teacherRepository.flush();
-        userCleanup.deleteIfUnreferenced(teacher.getUser());
+        userCleanup.suspendIfUnreferenced(teacher.getUser());
     }
 
 
@@ -269,7 +276,24 @@ public class TeacherService {
     @Transactional
     public TeacherDto create(TeacherDto data) {
         currentUser.requireRole("ADMIN");
-        return mapper.toDto(createEntity(mapper.toInput(data)));
+        return mapper.toDto(createEntity(mapper.toInput(data), true));
+    }
+
+    // Package-private: only the registration workflow may create a profile without ADMIN.
+    TeacherDto createRegisteredProfile(TeacherDto data) {
+        return mapper.toDto(createEntity(mapper.toInput(data), false));
+    }
+
+    TeacherDto restoreProfile(User user, String professionalTitle, String academicDegree) {
+        Teacher teacher = new Teacher();
+        teacher.setUser(user);
+        teacher.setProfessionalTitle(professionalTitle);
+        teacher.setAcademicDegree(academicDegree);
+        validateData(teacher);
+        teacher.setProfessionalTitle(professionalTitle.trim());
+        teacher.setAcademicDegree(academicDegree.trim());
+        teacher.setStatus(ActiveStatus.ACTIVE);
+        return mapper.toDto(teacherRepository.save(teacher));
     }
 
     @Transactional

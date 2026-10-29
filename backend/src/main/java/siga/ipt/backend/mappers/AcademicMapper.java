@@ -73,11 +73,12 @@ public class AcademicMapper {
         return new SectionScheduleBlockDto(entity.getId(), entity.getDayOfWeek(), entity.getModule());
     }
 
-    public SectionDto toDto(Section entity) {
+    public SectionDto toDto(Section entity, long registeredCount) {
         return new SectionDto(entity.getId(), entity.getCourse().getId(),
                 entity.getAcademicPeriod().getId(), entity.getTeacher().getId(),
                 entity.getCourse().getName(), entity.getTeacher().getUser().getFullName(),
-                entity.getCapacity(), entity.getScheduleBlocks().stream().map(this::toDto).toList());
+                entity.getCapacity(), registeredCount, Math.max(0L, entity.getCapacity() - registeredCount),
+                entity.getScheduleBlocks().stream().map(this::toDto).toList());
     }
 
     public AcademicRecordDto toDto(AcademicRecord entity) {

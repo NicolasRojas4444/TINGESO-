@@ -411,7 +411,7 @@ public class SectionService {
 
     public List<SectionDto> getAll() {
         currentUser.requireRole("ADMIN");
-        return getAllEntity().stream().map(mapper::toDto).toList();
+        return getAllEntity().stream().map(this::toSectionDto).toList();
     }
 
     public SectionDto getById(Long id) {
@@ -419,7 +419,7 @@ public class SectionService {
         Section section = getByIdEntity(id);
         currentUser.requireSectionAccess(section.getCourse().getStudyPlan().getId(),
                 section.getTeacher().getUser().getKeycloakSubject());
-        return mapper.toDto(section);
+        return toSectionDto(section);
     }
 
     public List<SectionDto> getByPeriod(Long periodId) {
@@ -428,29 +428,34 @@ public class SectionService {
                 .filter(section -> currentUser.canReadSection(
                         section.getCourse().getStudyPlan().getId(),
                         section.getTeacher().getUser().getKeycloakSubject()))
-                .map(mapper::toDto).toList();
+                .map(this::toSectionDto).toList();
     }
 
     public List<SectionDto> getByTeacher(Long teacherId) {
         currentUser.requireTeacherAccess(teacherId);
-        return getByTeacherEntity(teacherId).stream().map(mapper::toDto).toList();
+        return getByTeacherEntity(teacherId).stream().map(this::toSectionDto).toList();
     }
 
     @Transactional
     public SectionDto create(Long courseId, Long periodId, Long teacherId, SectionDto data) {
         currentUser.requireRole("ADMIN");
-        return mapper.toDto(createEntity(courseId, periodId, teacherId, mapper.toInput(data)));
+        return toSectionDto(createEntity(courseId, periodId, teacherId, mapper.toInput(data)));
     }
 
     @Transactional
     public SectionDto update(Long id, Long teacherId, SectionDto data) {
         currentUser.requireRole("ADMIN");
-        return mapper.toDto(updateEntity(id, teacherId, mapper.toInput(data)));
+        return toSectionDto(updateEntity(id, teacherId, mapper.toInput(data)));
     }
 
     @Transactional
     public void delete(Long id) {
         currentUser.requireRole("ADMIN");
         deleteEntity(id);
+    }
+
+    private SectionDto toSectionDto(Section section) {
+        return mapper.toDto(section, courseRegistrationRepository
+                .countBySectionIdAndStatus(section.getId(), RegistrationStatus.ACTIVE));
     }
 }

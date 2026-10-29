@@ -26,6 +26,7 @@ import siga.ipt.backend.entitys.enums.PeriodStatus;
 import siga.ipt.backend.entitys.enums.RegistrationStatus;
 import siga.ipt.backend.entitys.enums.StudentStatus;
 import siga.ipt.backend.mappers.AcademicMapper;
+import siga.ipt.backend.exceptions.IncompleteGradesException;
 import siga.ipt.backend.repositories.AcademicPeriodRepository;
 import siga.ipt.backend.repositories.AcademicRecordRepository;
 import siga.ipt.backend.repositories.CourseRegistrationRepository;
@@ -85,7 +86,7 @@ public class AcademicClosingService {
                 .filter(registration -> !grades.containsKey(registration.getId()))
                 .map(registration -> registration.getSection().getId()).distinct().sorted().toList();
         if (!incompleteSections.isEmpty()) {
-            throw new IllegalStateException("Final grades are missing in sections: " + incompleteSections);
+            throw new IncompleteGradesException(incompleteSections);
         }
 
         List<Long> studentIds = registrations.stream().map(registration -> registration.getStudent().getId())

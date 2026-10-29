@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import siga.ipt.backend.dtos.StudentDto;
+import siga.ipt.backend.dtos.SelfRegistrationRole;
 import siga.ipt.backend.mappers.AcademicMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +32,7 @@ public class StudentService {
     private final AcademicMapper mapper;
     private final CurrentUserService currentUser;
     private final UserCleanupService userCleanup;
+    private final KeycloakRegistrationService keycloak;
 
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
@@ -55,7 +57,7 @@ public class StudentService {
     }
 
 
-    private Student createEntity(Long degreeProgramId, Student data) {
+    private Student createEntity(Long degreeProgramId, Student data, boolean verifyExistingAccount) {
         validateData(data);
 
         DegreeProgram degreeProgram = getActiveDegreeProgramForUpdate(
@@ -79,6 +81,9 @@ public class StudentService {
             throw new IllegalArgumentException(
                     "A user with this Keycloak subject already exists"
             );
+        }
+        if (verifyExistingAccount) {
+            keycloak.requireEnabledAccountRole(subject, SelfRegistrationRole.STUDENT);
         }
         User user = new User();
         user.setKeycloakSubject(subject);
@@ -108,6 +113,8 @@ public class StudentService {
         String email = normalizeEmail(userData.getEmail());
 
         validateUniqueIdentity(run, email, user.getId());
+
+        userCleanup.synchronizeIdentity(user, userData.getFullName().trim(), email);
 
         user.setRun(run);
         user.setFullName(userData.getFullName().trim());
@@ -181,7 +188,7 @@ public class StudentService {
         }
         studentRepository.delete(student);
         studentRepository.flush();
-        userCleanup.deleteIfUnreferenced(student.getUser());
+        userCleanup.suspendIfUnreferenced(student.getUser());
     }
 
 
@@ -347,7 +354,21 @@ public class StudentService {
     @Transactional
     public StudentDto create(Long degreeProgramId, StudentDto data) {
         currentUser.requireRole("ADMIN");
-        return mapper.toDto(createEntity(degreeProgramId, mapper.toInput(data)));
+        return mapper.toDto(createEntity(degreeProgramId, mapper.toInput(data), true));
+    }
+
+    // Package-private: only the registration workflow may create a profile without ADMIN.
+    StudentDto createRegisteredProfile(Long degreeProgramId, StudentDto data) {
+        return mapper.toDto(createEntity(degreeProgramId, mapper.toInput(data), false));
+    }
+
+    StudentDto restoreProfile(Long degreeProgramId, User user) {
+        DegreeProgram program = getActiveDegreeProgramForUpdate(degreeProgramId);
+        Student student = new Student();
+        student.setUser(user);
+        student.setStudyPlan(getCurrentPlan(program.getId()));
+        student.setAcademicStatus(StudentStatus.REGULAR);
+        return mapper.toDto(studentRepository.save(student));
     }
 
     @Transactional

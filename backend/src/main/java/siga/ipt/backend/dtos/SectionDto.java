@@ -10,6 +10,8 @@ public record SectionDto(
         String courseName,
         String teacherName,
         Integer capacity,
+        Long registeredCount,
+        Long availableSeats,
         List<SectionScheduleBlockDto> scheduleBlocks
 ) {
 }

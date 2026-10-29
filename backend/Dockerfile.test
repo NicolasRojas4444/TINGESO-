@@ -1,0 +1,12 @@
+FROM eclipse-temurin:21.0.9_10-jdk-jammy AS tests
+WORKDIR /app
+COPY gradle gradle
+COPY gradlew build.gradle settings.gradle ./
+RUN sed -i 's/\r$//' gradlew && chmod +x gradlew
+COPY src src
+ARG TEST_TASKS="clean check"
+RUN --mount=type=cache,target=/root/.gradle ./gradlew ${TEST_TASKS} --no-daemon --console=plain
+
+FROM scratch AS reports
+COPY --from=tests /app/build/reports /reports
+COPY --from=tests /app/build/test-results /test-results

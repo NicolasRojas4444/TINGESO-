@@ -3,6 +3,7 @@ package siga.ipt.backend.entitys;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -25,4 +26,9 @@ public class User extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 254)
     private String email;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean accessSuspended;
+
+    private Instant tokensValidAfter;
 }

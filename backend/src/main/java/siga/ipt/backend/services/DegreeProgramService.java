@@ -4,11 +4,13 @@ import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import siga.ipt.backend.dtos.DegreeProgramDto;
+import siga.ipt.backend.dtos.PublicDegreeProgramDto;
 import siga.ipt.backend.mappers.AcademicMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import siga.ipt.backend.entitys.DegreeProgram;
 import siga.ipt.backend.entitys.enums.ActiveStatus;
+import siga.ipt.backend.entitys.enums.PlanStatus;
 import siga.ipt.backend.repositories.DegreeProgramRepository;
 import siga.ipt.backend.repositories.StudyPlanRepository;
 
@@ -139,6 +141,13 @@ public class DegreeProgramService {
     public List<DegreeProgramDto> getAll() {
         currentUser.requireAcademicUser();
         return getAllEntity().stream().map(mapper::toDto).toList();
+    }
+
+    public List<PublicDegreeProgramDto> getRegistrationOptions() {
+        return degreeProgramRepository.findRegistrationOptions(ActiveStatus.ACTIVE, PlanStatus.CURRENT)
+                .stream()
+                .map(program -> new PublicDegreeProgramDto(program.getId(), program.getCode(), program.getName()))
+                .toList();
     }
 
     public DegreeProgramDto getById(Long id) {

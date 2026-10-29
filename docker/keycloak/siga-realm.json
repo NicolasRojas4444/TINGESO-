@@ -13,6 +13,23 @@
       "webOrigins": ["${FRONTEND_URL}"],
       "attributes": {"pkce.code.challenge.method": "S256"},
       "defaultClientScopes": ["basic", "web-origins", "acr", "profile", "roles", "email"]
+    },
+    {
+      "clientId": "siga-backend-registration",
+      "publicClient": false,
+      "secret": "${KEYCLOAK_REGISTRATION_CLIENT_SECRET}",
+      "serviceAccountsEnabled": true,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "defaultClientScopes": ["basic", "roles"]
+    }
+  ],
+  "users": [
+    {
+      "username": "service-account-siga-backend-registration",
+      "enabled": true,
+      "serviceAccountClientId": "siga-backend-registration",
+      "clientRoles": {"realm-management": ["manage-users", "view-realm"]}
     }
   ]
 }

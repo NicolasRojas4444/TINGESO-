@@ -6,12 +6,15 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import siga.ipt.backend.repositories.StudentRepository;
 import siga.ipt.backend.repositories.TeacherRepository;
+import siga.ipt.backend.repositories.UserRepository;
+import siga.ipt.backend.entitys.User;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +22,7 @@ public class CurrentUserService {
 
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private final UserRepository userRepository;
 
     public String subject() {
         return token().getSubject();
@@ -114,6 +118,14 @@ public class CurrentUserService {
                 || !(authentication.getPrincipal() instanceof Jwt jwt)
                 || jwt.getSubject() == null || jwt.getSubject().isBlank()) {
             throw new AuthenticationCredentialsNotFoundException("A validated JWT is required");
+        }
+        User user = userRepository.findByKeycloakSubject(jwt.getSubject()).orElse(null);
+        if (user != null && user.isAccessSuspended()) {
+            throw new AccessDeniedException("This account is suspended; contact an administrator");
+        }
+        if (user != null && user.getTokensValidAfter() != null
+                && (jwt.getIssuedAt() == null || jwt.getIssuedAt().isBefore(user.getTokensValidAfter()))) {
+            throw new CredentialsExpiredException("This session predates account suspension; sign in again");
         }
         return jwt;
     }
