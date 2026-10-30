@@ -98,6 +98,27 @@ services:
       start_period: 30s
     networks: [siga]
 
+  frontend:
+    image: siga-ipt-frontend:local
+    build: ./frontend
+    environment:
+      API_URL: ${BACKEND_PUBLIC_URL:-http://localhost:${BACKEND_PORT}}/api
+      KEYCLOAK_PUBLIC_URL: ${KEYCLOAK_PUBLIC_URL:?Set KEYCLOAK_PUBLIC_URL in .env}
+      KEYCLOAK_REALM: siga
+      KEYCLOAK_FRONTEND_CLIENT_ID: siga-frontend
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:5173/').then(r => { if (!r.ok) process.exit(1) }).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [siga]
+
 networks:
   siga:
 volumes:

@@ -5,8 +5,11 @@
   "scripts": {
     "build": "react-router build",
     "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "start": "node server.mjs",
+    "typecheck": "react-router typegen && tsc",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "format": "prettier --write app tests e2e *.ts *.mjs"
   },
   "dependencies": {
     "@react-router/node": "^8.4.0",
@@ -14,7 +17,9 @@
     "isbot": "^5.1.36",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-router": "^8.4.0"
+    "react-router": "^8.4.0",
+    "axios": "^1.13.2",
+    "keycloak-js": "^26.2.2"
   },
   "devDependencies": {
     "@react-router/dev": "^8.4.0",
@@ -24,6 +29,13 @@
     "@types/react-dom": "^19.2.7",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
-    "vite": "^8.0.3"
+    "vite": "^8.0.3",
+    "vitest": "^4.1.12",
+    "jsdom": "^27.0.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.9.0",
+    "@playwright/test": "1.64.1",
+    "pg": "^8.23.1",
+    "prettier": "^3.9.10"
   }
 }
