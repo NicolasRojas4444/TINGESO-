@@ -12,15 +12,24 @@ JWT Authorization headers and original paths/query strings are preserved.
 ## Prepare the server
 
 1. Install Docker Engine with Compose **2.30 or newer**, and copy/clone the repo.
-2. Point your domain's DNS at the server. Allow inbound TCP 80 and 443 in the cloud
+2. Point `sigarojas.duckdns.org` at the server. Allow inbound TCP 80 and 443 in the cloud
    firewall; keep PostgreSQL, backend, frontend and Keycloak ports unpublished.
    Keep whatever SSH access you use to administer the server.
-3. Supply a browser-trusted TLS certificate and private key for that domain on the
-   server. Certificate issuance/renewal is not automated by this configuration.
+3. Keep the Certbot certificate and private key on the Ubuntu server at
+   `/etc/letsencrypt/live/sigarojas.duckdns.org/fullchain.pem` and
+   `/etc/letsencrypt/live/sigarojas.duckdns.org/privkey.pem`.
+   The whole `/etc/letsencrypt` directory is mounted read-only so links from
+   `live/` to `archive/` remain valid. A missing directory fails startup rather
+   than creating an empty host directory. Certificate issuance/renewal is not
+   automated by this configuration.
    HTTPS is required for the frontend's PKCE browser cryptography outside localhost.
 4. Copy `.env.production.example` to `.env.production`; fill in the real origin,
-   Docker Hub image tags, secrets and absolute certificate paths. Do not use the
-   local demo passwords. `PUBLIC_URL` must have no trailing slash or path.
+   Docker Hub image tags and secrets. Keep
+   `PUBLIC_URL=https://sigarojas.duckdns.org` and
+   `LETSENCRYPT_DIRECTORY=/etc/letsencrypt`. Do not use the local demo passwords.
+   If upgrading an existing `.env.production`, replace `TLS_CERTIFICATE_FILE` and
+   `TLS_PRIVATE_KEY_FILE` with `LETSENCRYPT_DIRECTORY`. A domain change also needs
+   matching `server_name`, redirect and certificate paths in `default.conf`.
 5. Publish the frontend/backend images to your Docker Hub repositories before
    pulling them. This configuration does not publish images or set up a pipeline.
 
@@ -79,12 +88,29 @@ docker compose --env-file .env.production -p siga-production -f compose.producti
 Schema changes need a deliberate single-backend maintenance/update step and a
 backup, as with initial setup; validation does not migrate a schema.
 
+## Certificate renewal
+
+Certbot remains on the host; no extra container or renewal service is added.
+After a successful renewal, run from the repository root:
+
+```sh
+docker compose --env-file .env.production -p siga-production -f compose.production.yaml exec -T nginx nginx -t
+docker compose --env-file .env.production -p siga-production -f compose.production.yaml exec -T nginx nginx -s reload
+```
+
+Reload only if the configuration/certificate check succeeds. Mounting the whole
+directory lets Nginx see Certbot's new symlink targets; reloading makes its workers
+use the renewed certificate without restarting the other application services.
+If Certbot uses standalone HTTP validation, it cannot bind port 80 while Nginx is
+using it. Keep the validation method used when issuing the certificate; this
+configuration does not add a webroot challenge route or change Certbot settings.
+
 ## Check from a browser
 
-- `https://your-domain/`: application and Keycloak login/logout return correctly.
-- `https://your-domain/config.json`: API URL is `PUBLIC_URL/api`, Keycloak URL is
+- `https://sigarojas.duckdns.org/`: application and Keycloak login/logout return correctly.
+- `https://sigarojas.duckdns.org/config.json`: API URL is `PUBLIC_URL/api`, Keycloak URL is
   `PUBLIC_URL/auth`; no localhost addresses or secrets.
-- `https://your-domain/auth/realms/siga/.well-known/openid-configuration`: issuer is
+- `https://sigarojas.duckdns.org/auth/realms/siga/.well-known/openid-configuration`: issuer is
   `PUBLIC_URL/auth/realms/siga`.
 - An anonymous `/api/students` request returns 401, proving the API route reaches
   the protected backend rather than the frontend's HTML fallback.
