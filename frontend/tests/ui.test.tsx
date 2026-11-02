@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { ActionButton, FormPanel, TextField } from "../app/components/ui";
-import { ApiError } from "../app/lib/api";
+import { ApiError } from "../app/service/http";
 
 describe("forms and destructive actions", () => {
   it("retains form input when the server rejects a save", async () => {

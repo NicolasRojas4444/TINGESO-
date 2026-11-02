@@ -19,12 +19,9 @@ vi.mock("keycloak-js", () => ({
     }
   },
 }));
-import {
-  AuthProvider,
-  homeForRole,
-  RequireRole,
-  useAuth,
-} from "../app/lib/auth";
+import { AuthProvider, useAuth } from "../app/auth/AuthProvider";
+import { homeForRole } from "../app/auth/roles";
+import { RequireRole } from "../app/auth/RequireRole";
 
 function Probe() {
   const auth = useAuth();

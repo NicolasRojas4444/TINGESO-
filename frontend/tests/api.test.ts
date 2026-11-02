@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AxiosError } from "axios";
-import { ApiError, errorMessage, normalizeError } from "../app/lib/api";
+import { ApiError, errorMessage, normalizeError } from "../app/service/http";
 
 function failure(status: number, data?: unknown) {
   return new AxiosError(

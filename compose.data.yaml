@@ -1,0 +1,23 @@
+# Explicit development-only tool; normal `docker compose up` does not run it.
+services:
+  academic-import:
+    profiles: [tools]
+    build: ./docker/data-import
+    image: siga-ipt-data-import:local
+    environment:
+      NODE_ENV: development
+      LOCAL_DATA_SETUP_ENABLED: ${LOCAL_DATA_SETUP_ENABLED:-false}
+      LOCAL_TEST_PASSWORD: ${LOCAL_TEST_PASSWORD:-}
+      PGHOST: postgres
+      PGPORT: 5432
+      PGDATABASE: ${POSTGRES_DB:?Set POSTGRES_DB in .env}
+      PGUSER: ${POSTGRES_USER:?Set POSTGRES_USER in .env}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: siga
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?Set KEYCLOAK_ADMIN in .env}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [siga]

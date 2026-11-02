@@ -27,6 +27,44 @@ backend port 8080 and Keycloak port 8081. Keep `FRONTEND_URL`,
 Only the public API URL, Keycloak URL, realm and public client ID are exposed at
 `/config.json`; credentials are never copied into the frontend image.
 
+## Frontend structure
+
+```text
+app/
+  views/          # One view per page, grouped by admin/student/teacher/shared
+  layouts/        # Workspace shell and role-protected areas
+  components/     # Reusable UI, forms, layout, registration and grades
+  service/        # API URLs and typed operations grouped by domain
+  auth/           # Session context, roles and route protection
+  config/         # Keycloak initialization and navigation menus
+  hooks/          # Shared resource-loading hook
+  lib/types.ts    # Shared API contracts
+  utils/          # Form helpers
+  styles/         # Theme, base, layout, components and page styles
+  routes.ts       # Public navigation routes mapped to views
+```
+
+To change colors, edit **`app/styles/theme.css`**. Its semantic variables control
+backgrounds, text, primary actions, borders and status messages. Layout rules are
+in `styles/layout.css`, reusable UI styles in `styles/components.css`, and login
+styles in `styles/views/login.css`. `app/app.css` imports these stylesheets.
+
+Backend endpoint paths belong in **`app/service/*Service.ts`**, not in views or
+components. `service/http.ts` centralizes Axios, bearer tokens and API errors;
+`service/runtimeConfigService.ts` loads the public runtime configuration.
+
+Keycloak is initialized once in **`app/config/keycloak.ts`**. Session state,
+login/logout and role checks are separated into `app/auth/AuthProvider.tsx`,
+`roles.ts` and `RequireRole.tsx`. Connection settings still come from `.env`
+through `/config.json`; do not add credentials to these source files. Navigation
+menus are configured in `app/config/navigation.ts`.
+
+After editing, rebuild only the frontend without restarting its dependencies:
+
+```powershell
+docker compose up -d --build --no-deps --wait frontend
+```
+
 ## Views
 
 - ADMIN: students, student detail/history/status/plan changes, teachers and their
@@ -62,6 +100,12 @@ Enrollment is external to SIGA IPT. A STUDENT must have a corresponding existing
 The UI displays the real backend rejection if enrollment is missing; it never
 bypasses this rule or adds fake enrollment automatically.
 
+The official 72-course catalog and the selected `admin`, `teacher`, `student`
+accounts can be prepared explicitly with the development-only
+[data import tool](../docker/data-import/README.md). This is not run at startup.
+The selected student's profile is linked to Analista Programador's plan 2021.3;
+other students keep their existing plans unless changed explicitly by ADMIN.
+
 Suggested walkthrough:
 
 1. ADMIN creates a program, a current plan, courses and prerequisites.
@@ -71,26 +115,7 @@ Suggested walkthrough:
 5. TEACHER records final grades. ADMIN closes the period.
 6. STUDENT consults consolidated history. Closed periods are read-only.
 
-## Reproducible browser tests (Windows / Docker Desktop)
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File frontend/scripts/test-e2e.ps1
-```
-
-The runner starts a uniquely named disposable Compose project, uses Chromium
-against the real Keycloak/PostgreSQL/backend/frontend, and removes **only its own
-volumes** afterwards. Test users, clients, courses and enrollment exist only in
-that isolated database. The main project's data is never seeded or removed.
-Ports 15432, 18081, 18080 and 15173 must be available.
-
-Browser tests cover actual login, ADMIN catalog changes, missing enrollment,
-STUDENT registration/cancellation/replacement and route denial, structured
-incomplete closing, TEACHER grade creation/update, ADMIN read-only grades,
-successful closing, consolidated STUDENT history and logout. They do not replace
-the backend's 18 formal integration cases required by the assignment.
-
-Failure screenshots/traces are saved under ignored `frontend/test-results`.
-Treat traces as sensitive: they can contain authenticated network requests.
+## Development
 
 For containerized development with HMR, build the `dependencies` stage and run
 `npm run dev -- --host 0.0.0.0` with the repository mounted and node_modules in a

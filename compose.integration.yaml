@@ -1,0 +1,36 @@
+# Standalone test stack. Never combine this file with compose.yaml.
+services:
+  integration-postgres:
+    image: postgres:17.6
+    environment:
+      POSTGRES_DB: siga_integration
+      POSTGRES_USER: siga_integration
+      POSTGRES_PASSWORD: ${INTEGRATION_DB_PASSWORD:?Use backend/scripts/test-integration.ps1 or set an ephemeral test password}
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U siga_integration -d siga_integration"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks: [integration]
+
+  integration-tests:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.integration
+    environment:
+      INTEGRATION_DB_URL: jdbc:postgresql://integration-postgres:5432/siga_integration
+      INTEGRATION_DB_PASSWORD: ${INTEGRATION_DB_PASSWORD:?Set an ephemeral test password}
+    volumes:
+      - ./backend/build/integration-test-artifacts:/app/build
+      - integration_gradle:/root/.gradle
+    depends_on:
+      integration-postgres:
+        condition: service_healthy
+    networks: [integration]
+
+networks:
+  integration:
+volumes:
+  integration_gradle:

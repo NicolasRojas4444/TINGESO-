@@ -8,12 +8,12 @@ const mocks = vi.hoisted(() => ({
   put: vi.fn(),
   delete: vi.fn(),
 }));
-vi.mock("../app/lib/api", async (original) => ({
-  ...(await original<typeof import("../app/lib/api")>()),
+vi.mock("../app/service/http", async (original) => ({
+  ...(await original<typeof import("../app/service/http")>()),
   get: mocks.get,
   api: { post: mocks.post, put: mocks.put, delete: mocks.delete },
 }));
-import StudentRegistration from "../app/routes/student-registration";
+import StudentRegistration from "../app/views/student/RegistrationView";
 
 const student = {
   id: 1,

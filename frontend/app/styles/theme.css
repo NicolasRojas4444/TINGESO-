@@ -1,0 +1,34 @@
+/* Change the application palette here. Components use these semantic variables. */
+:root {
+  --color-background: #f1f5f9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8fafc;
+  --color-text: #1e293b;
+  --color-heading: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+  --color-navigation-text: #334155;
+  --color-border: #e2e8f0;
+  --color-control-border: #cbd5e1;
+  --color-row-border: #f1f5f9;
+
+  --color-primary: #115e59;
+  --color-primary-hover: #134e4a;
+  --color-primary-border: #0f766e;
+  --color-primary-soft: #f0fdfa;
+  --color-on-primary: #ffffff;
+  --color-focus: #14b8a6;
+
+  --color-danger-background: #fef2f2;
+  --color-danger-border: #fecaca;
+  --color-danger-text: #991b1b;
+  --color-danger-strong: #7f1d1d;
+  --color-success-background: #ecfdf5;
+  --color-success-border: #a7f3d0;
+  --color-success-text: #064e3b;
+  --color-info-background: #f0f9ff;
+  --color-info-border: #bae6fd;
+  --color-info-text: #0c4a6e;
+  --color-shadow: rgb(15 23 42 / 8%);
+}

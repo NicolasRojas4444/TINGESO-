@@ -2,11 +2,10 @@ package siga.ipt.backend;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Tag;
-import org.springframework.boot.test.context.SpringBootTest;
+import siga.ipt.backend.integration.AcademicIntegrationSupport;
 
-@SpringBootTest
 @Tag("integration")
-class BackendApplicationTests {
+class BackendApplicationTests extends AcademicIntegrationSupport {
 
 	@Test
 	void contextLoads() {

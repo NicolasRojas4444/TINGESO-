@@ -1,0 +1,377 @@
+{
+  "source": "Evaluacion1_v1.pdf, Appendix A, pages 12-13",
+  "programs": [
+    {
+      "code": "10450",
+      "name": "Técnico Analista Programador",
+      "version": "2021.3",
+      "courses": [
+        ["TAP101", "Fundamentos de Programación", 1, 2, 2, 2, 6, []],
+        ["TAP102", "Matemática Aplicada", 1, 2, 2, 0, 5, []],
+        ["TAP103", "Fundamentos de Computación", 1, 2, 0, 2, 4, []],
+        ["TAP104", "Bases de Datos I", 1, 2, 0, 2, 5, []],
+        ["TAP105", "Comunicación Efectiva", 1, 2, 2, 0, 4, []],
+        ["TAP106", "Inglés Técnico I", 1, 2, 2, 0, 4, []],
+        [
+          "TAP201",
+          "Programación Orientada a Objetos",
+          2,
+          2,
+          2,
+          2,
+          6,
+          ["TAP101"]
+        ],
+        ["TAP202", "Estructuras de Datos", 2, 2, 2, 2, 6, ["TAP101"]],
+        ["TAP203", "Bases de Datos II", 2, 2, 0, 2, 5, ["TAP104"]],
+        ["TAP204", "Desarrollo Web I", 2, 2, 0, 4, 6, ["TAP101"]],
+        ["TAP205", "Sistemas Operativos", 2, 2, 0, 2, 4, ["TAP103"]],
+        ["TAP206", "Inglés Técnico II", 2, 2, 2, 0, 3, ["TAP106"]],
+        ["TAP301", "Desarrollo Web II", 3, 2, 0, 4, 6, ["TAP201", "TAP204"]],
+        ["TAP302", "Ingeniería de Software", 3, 2, 2, 0, 5, ["TAP201"]],
+        [
+          "TAP303",
+          "Desarrollo de Aplicaciones Móviles",
+          3,
+          2,
+          0,
+          4,
+          6,
+          ["TAP201"]
+        ],
+        [
+          "TAP304",
+          "Administración de Bases de Datos",
+          3,
+          2,
+          0,
+          2,
+          5,
+          ["TAP203"]
+        ],
+        ["TAP305", "Redes y Comunicaciones", 3, 2, 0, 2, 4, ["TAP205"]],
+        [
+          "TAP306",
+          "Taller de Programación",
+          3,
+          0,
+          0,
+          4,
+          4,
+          ["TAP201", "TAP202"]
+        ],
+        [
+          "TAP401",
+          "Arquitectura y Desarrollo de Software",
+          4,
+          2,
+          0,
+          4,
+          6,
+          ["TAP301", "TAP302"]
+        ],
+        [
+          "TAP402",
+          "Desarrollo de Aplicaciones Cloud",
+          4,
+          2,
+          0,
+          4,
+          6,
+          ["TAP301"]
+        ],
+        [
+          "TAP403",
+          "Seguridad de Aplicaciones",
+          4,
+          2,
+          0,
+          2,
+          4,
+          ["TAP301", "TAP305"]
+        ],
+        ["TAP404", "Calidad y Pruebas de Software", 4, 2, 2, 0, 5, ["TAP302"]],
+        [
+          "TAP405",
+          "Proyecto de Desarrollo de Software",
+          4,
+          0,
+          0,
+          6,
+          6,
+          ["TAP301", "TAP302", "TAP306"]
+        ],
+        [
+          "TAP406",
+          "Emprendimiento y Gestión de Proyectos",
+          4,
+          2,
+          2,
+          0,
+          3,
+          ["TAP302"]
+        ]
+      ]
+    },
+    {
+      "code": "10451",
+      "name": "Técnico en Análisis de Datos",
+      "version": "2022.3",
+      "courses": [
+        ["TAD101", "Fundamentos de Programación", 1, 2, 2, 2, 6, []],
+        ["TAD102", "Matemática Aplicada", 1, 2, 2, 0, 5, []],
+        ["TAD103", "Introducción al Análisis de Datos", 1, 2, 0, 2, 5, []],
+        ["TAD104", "Bases de Datos I", 1, 2, 0, 2, 5, []],
+        ["TAD105", "Herramientas Computacionales", 1, 0, 0, 4, 4, []],
+        ["TAD106", "Comunicación Efectiva", 1, 2, 2, 0, 4, []],
+        [
+          "TAD201",
+          "Programación para Análisis de Datos",
+          2,
+          2,
+          0,
+          4,
+          6,
+          ["TAD101"]
+        ],
+        ["TAD202", "Probabilidad y Estadística", 2, 2, 2, 2, 6, ["TAD102"]],
+        ["TAD203", "Bases de Datos II", 2, 2, 0, 2, 5, ["TAD104"]],
+        [
+          "TAD204",
+          "Preparación y Calidad de Datos",
+          2,
+          2,
+          0,
+          4,
+          5,
+          ["TAD103", "TAD101"]
+        ],
+        ["TAD205", "Visualización de Datos", 2, 2, 0, 2, 5, ["TAD103"]],
+        ["TAD206", "Inglés Técnico", 2, 2, 2, 0, 3, []],
+        ["TAD301", "Estadística Aplicada", 3, 2, 2, 2, 6, ["TAD202"]],
+        ["TAD302", "Minería de Datos", 3, 2, 0, 4, 6, ["TAD201", "TAD202"]],
+        [
+          "TAD303",
+          "Inteligencia de Negocios",
+          3,
+          2,
+          0,
+          4,
+          5,
+          ["TAD203", "TAD205"]
+        ],
+        [
+          "TAD304",
+          "Integración y Procesamiento de Datos",
+          3,
+          2,
+          0,
+          4,
+          5,
+          ["TAD201", "TAD203"]
+        ],
+        [
+          "TAD305",
+          "Visualización Avanzada de Datos",
+          3,
+          2,
+          0,
+          2,
+          4,
+          ["TAD205"]
+        ],
+        ["TAD306", "Ética y Protección de Datos", 3, 2, 2, 0, 4, ["TAD103"]],
+        [
+          "TAD401",
+          "Fundamentos de Machine Learning",
+          4,
+          2,
+          0,
+          4,
+          6,
+          ["TAD301", "TAD302"]
+        ],
+        [
+          "TAD402",
+          "Big Data y Procesamiento de Datos",
+          4,
+          2,
+          0,
+          4,
+          5,
+          ["TAD304"]
+        ],
+        [
+          "TAD403",
+          "Analítica de Negocios",
+          4,
+          2,
+          0,
+          2,
+          5,
+          ["TAD301", "TAD303"]
+        ],
+        [
+          "TAD404",
+          "Desarrollo de Soluciones de Datos",
+          4,
+          2,
+          0,
+          4,
+          5,
+          ["TAD302", "TAD304"]
+        ],
+        [
+          "TAD405",
+          "Proyecto de Análisis de Datos",
+          4,
+          0,
+          0,
+          6,
+          6,
+          ["TAD302", "TAD303", "TAD305"]
+        ],
+        ["TAD406", "Emprendimiento y Gestión de Proyectos", 4, 2, 2, 0, 3, []]
+      ]
+    },
+    {
+      "code": "10452",
+      "name": "Técnico en Ciberseguridad",
+      "version": "2021.3",
+      "courses": [
+        ["TCS101", "Fundamentos de Programación", 1, 2, 2, 2, 6, []],
+        [
+          "TCS102",
+          "Fundamentos de Sistemas Computacionales",
+          1,
+          2,
+          0,
+          2,
+          5,
+          []
+        ],
+        ["TCS103", "Redes de Computadores I", 1, 2, 0, 2, 5, []],
+        ["TCS104", "Sistemas Operativos", 1, 2, 0, 2, 5, []],
+        ["TCS105", "Matemática Aplicada", 1, 2, 2, 0, 5, []],
+        ["TCS106", "Comunicación Efectiva", 1, 2, 2, 0, 4, []],
+        [
+          "TCS201",
+          "Programación para Ciberseguridad",
+          2,
+          2,
+          0,
+          4,
+          5,
+          ["TCS101"]
+        ],
+        ["TCS202", "Redes de Computadores II", 2, 2, 0, 4, 6, ["TCS103"]],
+        [
+          "TCS203",
+          "Administración de Sistemas Linux",
+          2,
+          2,
+          0,
+          4,
+          5,
+          ["TCS104"]
+        ],
+        [
+          "TCS204",
+          "Fundamentos de Ciberseguridad",
+          2,
+          2,
+          2,
+          2,
+          6,
+          ["TCS102", "TCS103"]
+        ],
+        ["TCS205", "Bases de Datos", 2, 2, 0, 2, 5, ["TCS101"]],
+        ["TCS206", "Inglés Técnico", 2, 2, 2, 0, 3, []],
+        ["TCS301", "Seguridad de Redes", 3, 2, 0, 4, 6, ["TCS202", "TCS204"]],
+        [
+          "TCS302",
+          "Seguridad de Sistemas Operativos",
+          3,
+          2,
+          0,
+          4,
+          5,
+          ["TCS203", "TCS204"]
+        ],
+        ["TCS303", "Criptografía Aplicada", 3, 2, 2, 2, 5, ["TCS204"]],
+        [
+          "TCS304",
+          "Seguridad de Aplicaciones Web",
+          3,
+          2,
+          0,
+          4,
+          5,
+          ["TCS201", "TCS204"]
+        ],
+        [
+          "TCS305",
+          "Monitoreo y Detección de Amenazas",
+          3,
+          2,
+          0,
+          4,
+          5,
+          ["TCS202", "TCS204"]
+        ],
+        [
+          "TCS306",
+          "Legislación y Ética en Ciberseguridad",
+          3,
+          2,
+          2,
+          0,
+          4,
+          ["TCS204"]
+        ],
+        [
+          "TCS401",
+          "Ethical Hacking y Pruebas de Penetración",
+          4,
+          2,
+          0,
+          4,
+          6,
+          ["TCS301", "TCS302"]
+        ],
+        [
+          "TCS402",
+          "Gestión de Incidentes de Ciberseguridad",
+          4,
+          2,
+          0,
+          4,
+          5,
+          ["TCS305"]
+        ],
+        ["TCS403", "Seguridad en Cloud", 4, 2, 0, 4, 5, ["TCS301", "TCS302"]],
+        ["TCS404", "Análisis Forense Digital", 4, 2, 0, 4, 5, ["TCS302"]],
+        [
+          "TCS405",
+          "Proyecto de Ciberseguridad",
+          4,
+          0,
+          0,
+          6,
+          6,
+          ["TCS301", "TCS302", "TCS305"]
+        ],
+        [
+          "TCS406",
+          "Gestión de Riesgos de Ciberseguridad",
+          4,
+          2,
+          2,
+          0,
+          3,
+          ["TCS204"]
+        ]
+      ]
+    }
+  ]
+}

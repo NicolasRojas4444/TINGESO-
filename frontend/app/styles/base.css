@@ -1,0 +1,94 @@
+@layer base {
+  html {
+    background: var(--color-background);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+  }
+  body {
+    margin: 0;
+  }
+  h1 {
+    @apply text-2xl font-semibold tracking-tight;
+    margin: 0;
+  }
+  h2 {
+    @apply text-lg font-semibold;
+    margin: 0 0 1rem;
+  }
+  h3 {
+    @apply font-semibold;
+    margin-bottom: 0.5rem;
+  }
+  p {
+    margin: 0.5rem 0 1rem;
+  }
+  a {
+    color: var(--color-primary);
+    text-underline-offset: 3px;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+  button {
+    @apply rounded-md px-3 py-2 text-sm font-medium;
+    border: 1px solid var(--color-control-border);
+    background: var(--color-surface);
+    cursor: pointer;
+  }
+  button:hover:not(:disabled) {
+    border-color: var(--color-primary-border);
+    background: var(--color-primary-soft);
+  }
+  button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+  button.primary {
+    border-color: var(--color-primary);
+    background: var(--color-primary);
+    color: var(--color-on-primary);
+  }
+  button.primary:hover:not(:disabled) {
+    background: var(--color-primary-hover);
+  }
+  button.danger {
+    border-color: var(--color-danger-border);
+    color: var(--color-danger-text);
+  }
+  button.danger:hover:not(:disabled) {
+    background: var(--color-danger-background);
+    border-color: var(--color-danger-text);
+  }
+  input:not([type="checkbox"]),
+  select,
+  textarea {
+    @apply w-full rounded-md px-3 py-2 text-sm;
+    border: 1px solid var(--color-control-border);
+    background: var(--color-surface);
+    min-height: 2.5rem;
+  }
+  input[type="checkbox"] {
+    width: 1.15rem;
+    height: 1.15rem;
+    accent-color: var(--color-primary-border);
+  }
+  textarea {
+    min-height: 5rem;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  fieldset {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+  }
+  small {
+    @apply text-xs;
+    display: block;
+    color: var(--color-text-muted);
+    margin-top: 0.35rem;
+  }
+}

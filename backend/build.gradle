@@ -43,6 +43,17 @@ tasks.named('test') {
 	finalizedBy tasks.named('jacocoTestReport')
 }
 
+tasks.register('integrationTest', Test) {
+	testClassesDirs = sourceSets.test.output.classesDirs
+	classpath = sourceSets.test.runtimeClasspath
+	// Each run starts with a fresh disposable database; never reuse old results.
+	outputs.upToDateWhen { false }
+	useJUnitPlatform {
+		includeTags 'integration'
+	}
+	shouldRunAfter tasks.named('test')
+}
+
 jacoco {
 	toolVersion = '0.8.14'
 }

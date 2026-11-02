@@ -6,26 +6,26 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
-  index("routes/home.tsx"),
-  layout("routes/workspace.tsx", [
-    route("admin", "routes/admin.tsx", [
-      route("students", "routes/students.tsx"),
-      route("students/:id", "routes/student-detail.tsx"),
-      route("teachers", "routes/teachers.tsx"),
-      route("teachers/:id", "routes/teacher-detail.tsx"),
-      route("programs", "routes/programs.tsx"),
-      route("programs/:id", "routes/program-detail.tsx"),
-      route("plans/:id", "routes/plan-detail.tsx"),
-      route("periods", "routes/periods.tsx"),
-      route("periods/:id", "routes/period-detail.tsx"),
+  index("views/LoginView.tsx"),
+  layout("layouts/WorkspaceLayout.tsx", [
+    route("admin", "layouts/AdminLayout.tsx", [
+      route("students", "views/admin/StudentsView.tsx"),
+      route("students/:id", "views/admin/StudentDetailView.tsx"),
+      route("teachers", "views/admin/TeachersView.tsx"),
+      route("teachers/:id", "views/admin/TeacherDetailView.tsx"),
+      route("programs", "views/admin/ProgramsView.tsx"),
+      route("programs/:id", "views/admin/ProgramDetailView.tsx"),
+      route("plans/:id", "views/admin/PlanDetailView.tsx"),
+      route("periods", "views/admin/PeriodsView.tsx"),
+      route("periods/:id", "views/admin/PeriodDetailView.tsx"),
     ]),
-    route("teacher/sections", "routes/teacher-sections.tsx"),
-    route("sections/:id", "routes/section-detail.tsx"),
-    route("student", "routes/student.tsx", [
-      route("profile", "routes/student-profile.tsx"),
-      route("plan", "routes/student-plan.tsx"),
-      route("registration", "routes/student-registration.tsx"),
-      route("history", "routes/student-history.tsx"),
+    route("teacher/sections", "views/teacher/SectionsView.tsx"),
+    route("sections/:id", "views/shared/SectionDetailView.tsx"),
+    route("student", "layouts/StudentLayout.tsx", [
+      route("profile", "views/student/ProfileView.tsx"),
+      route("plan", "views/student/PlanView.tsx"),
+      route("registration", "views/student/RegistrationView.tsx"),
+      route("history", "views/student/HistoryView.tsx"),
     ]),
   ]),
 ] satisfies RouteConfig;
