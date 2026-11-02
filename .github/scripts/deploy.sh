@@ -24,7 +24,13 @@ trap cleanup EXIT
 
 # --overwrite keeps mounted configuration file inodes intact for Nginx reload.
 # The archive contains only the five versioned deployment configuration files.
-tar --overwrite -xzf "$archive"
+# Public configuration must be readable by the non-root container users.
+# Keep the restrictive process umask for secrets and temporary files only.
+(umask 022; tar --overwrite -xzf "$archive")
+chmod 755 docker docker/nginx docker/postgres docker/keycloak
+chmod 644 compose.production.yaml docker/nginx/default.conf \
+    docker/postgres/init-keycloak.sh docker/keycloak/siga-realm.json \
+    docker/keycloak/setup-registration.sh
 chmod 600 .env
 
 compose() {
@@ -34,6 +40,10 @@ compose() {
 compose config --quiet
 compose pull
 compose run --rm --no-deps nginx nginx -t
+compose up -d --wait --wait-timeout 120 postgres
+# An interrupted first initialization leaves PGDATA populated, so the official
+# image skips init scripts on restart. Re-run this idempotent setup before IAM.
+compose exec -T --user postgres postgres bash /docker-entrypoint-initdb.d/init-keycloak.sh
 compose up -d --wait --wait-timeout 360
 compose exec -T nginx nginx -t
 compose exec -T nginx nginx -s reload

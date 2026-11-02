@@ -68,6 +68,22 @@ should exit successfully. No test accounts, enrollment or catalog are seeded.
 
 ## Existing data and later deployments
 
+If the first PostgreSQL startup failed with `init-keycloak.sh: Permission denied`,
+fix the script permissions and complete the interrupted IAM database setup without
+deleting the volume (run from the repository root after updating the script):
+
+```sh
+chmod 644 docker/postgres/init-keycloak.sh
+docker compose -p siga-production -f compose.production.yaml up -d --wait postgres
+docker compose -p siga-production -f compose.production.yaml exec -T --user postgres postgres bash /docker-entrypoint-initdb.d/init-keycloak.sh
+```
+
+The setup creates the Keycloak database role/database only if absent. It does not
+change existing passwords or seed application accounts. For a failed development
+startup, use `docker compose` without `-p siga-production -f compose.production.yaml`
+in both commands to target that development database instead. Automatic deployment
+performs this recovery itself and normalizes public configuration permissions.
+
 Back up PostgreSQL before deploying changes. Do not run `down -v`: it deletes the
 database volume. Starting this new project does **not** copy local data into the
 cloud; restoring application and Keycloak data is a separate administrative step.

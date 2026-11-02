@@ -71,6 +71,11 @@ script, and the two Keycloak configuration files. It never transfers `.env`,
 certificates, the local database or test accounts, and never runs `down -v`.
 Nginx configuration/certificates are checked before updating services. Successful
 image tags are saved in the server `.env` for subsequent manual use.
+Extracted public configuration is set to mode 644 and its directories to 755 so
+container users can read bind mounts; `.env` remains private (600). Before
+starting Keycloak, deployment runs the idempotent PostgreSQL initialization script
+to recover an interrupted first setup. Existing database roles, passwords and data
+are not replaced.
 
 Image tags are `docker.io/<username>/siga-backend:sha-<full-commit-sha>` and
 `docker.io/<username>/siga-frontend:sha-<full-commit-sha>`. There is no ambiguous
