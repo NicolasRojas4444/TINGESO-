@@ -7,6 +7,9 @@ deployment_path=${1:?Deployment directory required}
 revision=${2:?Commit SHA required}
 export BACKEND_IMAGE=${3:?Backend image required}
 export FRONTEND_IMAGE=${4:?Frontend image required}
+export APP_PULL_POLICY=always
+export COMPOSE_FILE=compose.production.yaml
+export COMPOSE_PROJECT_NAME=siga-production
 [[ "$deployment_path" =~ ^/[a-zA-Z0-9_/-]+$ && "$deployment_path" != / ]]
 [[ "$revision" =~ ^[a-f0-9]{40}$ ]]
 [[ "$BACKEND_IMAGE" =~ ^docker[.]io/[a-z0-9_-]+/siga-backend:sha-$revision$ ]]
@@ -34,16 +37,12 @@ chmod 644 compose.production.yaml docker/nginx/default.conf \
 chmod 600 .env
 
 compose() {
-    docker compose --env-file .env -p siga-production -f compose.production.yaml "$@"
+    docker compose --env-file .env "$@"
 }
 
 compose config --quiet
 compose pull
 compose run --rm --no-deps nginx nginx -t
-compose up -d --wait --wait-timeout 120 postgres
-# An interrupted first initialization leaves PGDATA populated, so the official
-# image skips init scripts on restart. Re-run this idempotent setup before IAM.
-compose exec -T --user postgres postgres bash /docker-entrypoint-initdb.d/init-keycloak.sh
 compose up -d --wait --wait-timeout 360
 compose exec -T nginx nginx -t
 compose exec -T nginx nginx -s reload
@@ -53,8 +52,14 @@ temporary_env=$(mktemp "$deployment_path/.env.XXXXXX")
 awk -v backend="$BACKEND_IMAGE" -v frontend="$FRONTEND_IMAGE" '
     /^[[:space:]]*(export[[:space:]]+)?BACKEND_IMAGE[[:space:]]*=/ { next }
     /^[[:space:]]*(export[[:space:]]+)?FRONTEND_IMAGE[[:space:]]*=/ { next }
+    /^[[:space:]]*(export[[:space:]]+)?COMPOSE_FILE[[:space:]]*=/ { next }
+    /^[[:space:]]*(export[[:space:]]+)?COMPOSE_PROJECT_NAME[[:space:]]*=/ { next }
     { print }
-    END { print "BACKEND_IMAGE=" backend; print "FRONTEND_IMAGE=" frontend }
+    END {
+        print "BACKEND_IMAGE=" backend; print "FRONTEND_IMAGE=" frontend
+        print "COMPOSE_FILE=compose.production.yaml"
+        print "COMPOSE_PROJECT_NAME=siga-production"
+    }
 ' .env > "$temporary_env"
 cat "$temporary_env" > .env
 compose ps

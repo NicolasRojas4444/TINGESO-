@@ -5,10 +5,10 @@ SIGA IPT: Spring Boot backend and an initial functional React frontend.
 Use a single untracked `.env` in the repository root on each machine. Keep your
 existing passwords; do not commit or copy credentials into GitHub workflows.
 Both development and production Compose read this same filename automatically.
-To start locally:
+After configuring `.env`, use the same startup command locally and on the server:
 
 ```powershell
-docker compose up --build -d --wait
+docker compose up --build -d
 ```
 
 There are only two Compose files:
@@ -16,6 +16,13 @@ There are only two Compose files:
 - `compose.yaml`: development. Optional data import (`tools`) and isolated backend
   tests (`integration`) run only when explicitly requested, not on normal startup.
 - `compose.production.yaml`: server deployment with Nginx and three backends.
+  The server `.env` selects it using `COMPOSE_FILE` below.
+
+Compose automatically creates the Keycloak database if missing and runs one
+temporary backend to initialize/update the application schema before starting
+the normal backend(s). These setup containers exit successfully; no manual SQL,
+one-backend startup or changes between `update`/`validate` are required. Setup
+does not seed application users, enrollment or catalog.
 
 - Frontend: http://localhost:5173
 - Backend / API: http://localhost:8080
@@ -25,7 +32,7 @@ There are only two Compose files:
 
 Common required variables in `.env` are `POSTGRES_DB`, `POSTGRES_USER`,
 `POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `KEYCLOAK_ADMIN`,
-`KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_REGISTRATION_CLIENT_SECRET` and `JPA_DDL_AUTO`.
+`KEYCLOAK_ADMIN_PASSWORD` and `KEYCLOAK_REGISTRATION_CLIENT_SECRET`.
 Choose your own nonempty secrets; existing database and Keycloak credentials must
 match their persisted accounts.
 
@@ -50,13 +57,22 @@ On the server, use the same `.env` filename and add:
 ```dotenv
 PUBLIC_URL=https://sigarojas.duckdns.org
 LETSENCRYPT_DIRECTORY=/etc/letsencrypt
+COMPOSE_FILE=compose.production.yaml
+COMPOSE_PROJECT_NAME=siga-production
+APP_PULL_POLICY=build
 ```
 
-Set `BACKEND_IMAGE` and `FRONTEND_IMAGE` to real published Docker Hub tags from the
-same successful workflow commit. Do not put example labels like
-`sha-COMMIT_PUBLICADO` in those variables. Set `JPA_DDL_AUTO=validate` after initial
-schema setup (see deployment instructions). Production does not use the local
-ports/URLs above; it derives public URLs from `PUBLIC_URL`.
+For manual source builds, `BACKEND_IMAGE` and `FRONTEND_IMAGE` are optional; remove
+example values such as `sha-COMMIT_PUBLICADO`. Default local image names are used.
+Actions supplies exact published image tags and overrides `APP_PULL_POLICY=always`
+to use them without building on the server. Both paths use the same Compose setup
+dependencies. `JPA_DDL_AUTO` in an old `.env` is no longer used by Compose: the
+single schema job uses `update` and serving backends use `validate`.
+Production derives public URLs from `PUBLIC_URL`, not the local URLs above.
+
+Keep the same project name once deployed: changing it selects a different database
+volume, not a copy of the existing data. Local development can omit `COMPOSE_FILE`,
+`COMPOSE_PROJECT_NAME` and `APP_PULL_POLICY` to retain its current defaults.
 
 GitHub Actions credentials are configured in repository **Secrets and variables**,
 not in `.env` or `.secrets`. The integration runner generates temporary disposable

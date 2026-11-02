@@ -61,10 +61,11 @@ that local file is ignored by Git and is not read by Actions.
    database/Keycloak secrets and Certbot directory. Never commit it. If images are
    private, perform `docker login` once on the server as the deployment user using
    a read-only Docker Hub token; the workflow does not send its publishing token.
-4. Initialize a fresh database with one backend and then `JPA_DDL_AUTO=validate`,
-   following the deployment guide. Use a published `sha-<commit>` image pair.
-   Initial schema setup, data restoration and future schema migrations remain
-   deliberate administrative operations, not automatic Hibernate updates.
+4. No manual database/schema bootstrap is needed: Compose setup dependencies
+   prepare the Keycloak database and run one schema-update job before the three
+   normal backend replicas. Existing passwords must still match `.env`. Data
+   restoration and incompatible/destructive schema migrations remain deliberate
+   administrative operations; take backups before updates.
 
 Each automatic deployment transfers only Compose, Nginx, the PostgreSQL init
 script, and the two Keycloak configuration files. It never transfers `.env`,
@@ -73,9 +74,11 @@ Nginx configuration/certificates are checked before updating services. Successfu
 image tags are saved in the server `.env` for subsequent manual use.
 Extracted public configuration is set to mode 644 and its directories to 755 so
 container users can read bind mounts; `.env` remains private (600). Before
-starting Keycloak, deployment runs the idempotent PostgreSQL initialization script
-to recover an interrupted first setup. Existing database roles, passwords and data
-are not replaced.
+starting Keycloak, Compose runs the idempotent database setup service to recover
+an interrupted first setup. Existing database roles and passwords are not replaced.
+Actions uses the same startup dependency graph as manual execution, with
+`APP_PULL_POLICY=always` to select published images rather than local source builds.
+It also saves `COMPOSE_FILE` and `COMPOSE_PROJECT_NAME` in `.env` after success.
 
 Image tags are `docker.io/<username>/siga-backend:sha-<full-commit-sha>` and
 `docker.io/<username>/siga-frontend:sha-<full-commit-sha>`. There is no ambiguous
@@ -85,17 +88,20 @@ Read the logs and verify container health before retrying.
 
 ## Manual deployment remains available
 
-On the server, inside `DEPLOY_PATH`, with the desired matching image tags in
-`.env`:
+On the server, update the full source checkout and configure `.env` as in the root
+README (`COMPOSE_FILE=compose.production.yaml`, `COMPOSE_PROJECT_NAME=siga-production`
+and `APP_PULL_POLICY=build`). Then:
 
 ```sh
-docker compose -p siga-production -f compose.production.yaml pull
-docker compose -p siga-production -f compose.production.yaml up -d --wait
+docker compose up --build -d
 ```
 
-If deployment configuration changed, update those versioned configuration files
-from the same commit as the images first. Reload Nginx after changing its config.
-Use `siga-production` consistently to preserve the correct database volume.
+Actions transfers deployment configuration, not the Java/React source tree.
+Update that full checkout before manually building from source. To deploy only
+published images manually instead, set `APP_PULL_POLICY=always` with the desired
+matching real image tags and use `docker compose up -d --pull always`.
+Reload Nginx after changing its config. Keep the project name unchanged to preserve
+the correct database volume.
 
 The assignment requires CD ending at Docker Hub and manual deployment. SSH
 deployment is the additional automation explicitly requested for this repository;
