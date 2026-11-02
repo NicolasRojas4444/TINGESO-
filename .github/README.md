@@ -28,6 +28,18 @@ Repository secrets:
 | `SSH_PRIVATE_KEY` | Complete deployment private key, without a passphrase |
 | `SSH_KNOWN_HOSTS` | Verified OpenSSH known_hosts entry for this server |
 
+`DOCKERHUB_USERNAME` may alternatively be a repository Secret with the same name.
+If both exist, the Variable takes precedence. For this account its value should
+be `donyetta`. `DOCKERHUB_TOKEN` must be a Docker Hub access token with write
+permission for both image repositories. A login performed on your PC/server does
+not authenticate the GitHub runner. An empty `.secrets` file is not the cause by
+itself: GitHub does not load that file at all.
+
+If publication still fails after configuring these values, inspect the failing
+step: missing-configuration messages identify absent entries; an unauthorized or
+denied Docker Hub response usually requires checking the token, account and
+repository permissions. Do not post the token in logs or chat.
+
 Verify the SSH host key fingerprint through a trusted channel (server console)
 before saving its known_hosts entry. For a nonstandard port the entry must use
 `[hostname]:port`. The workflow never disables host-key checking. Restrict the
@@ -42,7 +54,7 @@ that local file is ignored by Git and is not read by Actions.
    Docker group access is effectively root access; use a trusted deployment user.
 2. Authorize the public SSH key for that user, and permit SSH from the runner.
    The private key stays in GitHub Secrets.
-3. Prepare `DEPLOY_PATH/.env.production`, including the existing domain,
+3. Prepare the single `DEPLOY_PATH/.env`, including the existing domain,
    database/Keycloak secrets and Certbot directory. Never commit it. If images are
    private, perform `docker login` once on the server as the deployment user using
    a read-only Docker Hub token; the workflow does not send its publishing token.
@@ -55,7 +67,7 @@ Each automatic deployment transfers only Compose, Nginx, the PostgreSQL init
 script, and the two Keycloak configuration files. It never transfers `.env`,
 certificates, the local database or test accounts, and never runs `down -v`.
 Nginx configuration/certificates are checked before updating services. Successful
-image tags are saved in the server `.env.production` for subsequent manual use.
+image tags are saved in the server `.env` for subsequent manual use.
 
 Image tags are `docker.io/<username>/siga-backend:sha-<full-commit-sha>` and
 `docker.io/<username>/siga-frontend:sha-<full-commit-sha>`. There is no ambiguous
@@ -66,11 +78,11 @@ Read the logs and verify container health before retrying.
 ## Manual deployment remains available
 
 On the server, inside `DEPLOY_PATH`, with the desired matching image tags in
-`.env.production`:
+`.env`:
 
 ```sh
-docker compose --env-file .env.production -p siga-production -f compose.production.yaml pull
-docker compose --env-file .env.production -p siga-production -f compose.production.yaml up -d --wait
+docker compose -p siga-production -f compose.production.yaml pull
+docker compose -p siga-production -f compose.production.yaml up -d --wait
 ```
 
 If deployment configuration changed, update those versioned configuration files

@@ -5,7 +5,8 @@ Axios and Keycloak. It uses real API responses, not startup/demo data.
 
 ## Start with Docker
 
-From the repository root, configure `.env` using `.env.example`, then run:
+From the repository root, configure the single `.env` as described in the root
+README, then run:
 
 ```powershell
 docker compose up --build -d --wait

@@ -2,7 +2,10 @@
 
 SIGA IPT: Spring Boot backend and an initial functional React frontend.
 
-Configure the root `.env` using `.env.example`, then start the local stack:
+Use a single untracked `.env` in the repository root on each machine. Keep your
+existing passwords; do not commit or copy credentials into GitHub workflows.
+Both development and production Compose read this same filename automatically.
+To start locally:
 
 ```powershell
 docker compose up --build -d --wait
@@ -17,6 +20,47 @@ There are only two Compose files:
 - Frontend: http://localhost:5173
 - Backend / API: http://localhost:8080
 - Keycloak: http://localhost:8081
+
+## Environment configuration
+
+Common required variables in `.env` are `POSTGRES_DB`, `POSTGRES_USER`,
+`POSTGRES_PASSWORD`, `KEYCLOAK_DB_PASSWORD`, `KEYCLOAK_ADMIN`,
+`KEYCLOAK_ADMIN_PASSWORD`, `KEYCLOAK_REGISTRATION_CLIENT_SECRET` and `JPA_DDL_AUTO`.
+Choose your own nonempty secrets; existing database and Keycloak credentials must
+match their persisted accounts.
+
+For development also set:
+
+```dotenv
+POSTGRES_PORT=5432
+BACKEND_PORT=8080
+KEYCLOAK_PORT=8081
+FRONTEND_PORT=5173
+FRONTEND_URL=http://localhost:5173
+BACKEND_PUBLIC_URL=http://localhost:8080
+KEYCLOAK_PUBLIC_URL=http://localhost:8081
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+SELF_REGISTRATION_ENABLED=false
+TEACHER_SELF_REGISTRATION_ENABLED=false
+KEYCLOAK_REQUEST_TIMEOUT_SECONDS=10
+```
+
+On the server, use the same `.env` filename and add:
+
+```dotenv
+PUBLIC_URL=https://sigarojas.duckdns.org
+LETSENCRYPT_DIRECTORY=/etc/letsencrypt
+```
+
+Set `BACKEND_IMAGE` and `FRONTEND_IMAGE` to real published Docker Hub tags from the
+same successful workflow commit. Do not put example labels like
+`sha-COMMIT_PUBLICADO` in those variables. Set `JPA_DDL_AUTO=validate` after initial
+schema setup (see deployment instructions). Production does not use the local
+ports/URLs above; it derives public URLs from `PUBLIC_URL`.
+
+GitHub Actions credentials are configured in repository **Secrets and variables**,
+not in `.env` or `.secrets`. The integration runner generates temporary disposable
+settings itself; no additional environment configuration file is needed.
 
 Login is handled by Keycloak. The interface provides ADMIN, TEACHER and STUDENT
 areas; it does not create demo accounts or enrollment on startup.

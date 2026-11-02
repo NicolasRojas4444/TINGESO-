@@ -53,8 +53,8 @@ Tests use the optional `integration` services in the development `compose.yaml`,
 under a separate project named `siga-integration-tests`. The runner targets only
 `integration-tests` and its test database dependency, never the application stack.
 Do not run `up` without that service name in the test project.
-The temporary env file is built from `.env.example` with disposable passwords;
-it is deleted on exit and prevents Compose from loading the application `.env`.
+The runner generates temporary disposable settings itself; it does not need an
+example file or read the application `.env`. Temporary settings are deleted on exit.
 No running backend or Keycloak is needed. Database URL checks
 run before Hibernate initializes its test schema; fixtures additionally verify
 the database name before clearing data between cases. Do not run the suite against
@@ -86,20 +86,10 @@ Reports (preserved even after test failures):
 - HTML: `backend/build/integration-test-artifacts/reports/tests/integrationTest/index.html`
 - JUnit XML: `backend/build/integration-test-artifacts/test-results/integrationTest/`
 
-For a Linux shell or a future CI runner, use disposable variables. Application
-password variables only satisfy development Compose interpolation; no application
-containers are started by the following targeted command:
+On GitHub's Ubuntu runner the workflow invokes the same script with `shell: pwsh`.
+For Linux outside Actions, install PowerShell and run
+`pwsh -NoProfile -File backend/scripts/test-integration.ps1`.
 
-```sh
-export INTEGRATION_DB_PASSWORD="$(openssl rand -hex 32)"
-export POSTGRES_PASSWORD="$INTEGRATION_DB_PASSWORD"
-export KEYCLOAK_DB_PASSWORD="$INTEGRATION_DB_PASSWORD"
-export KEYCLOAK_ADMIN_PASSWORD="$INTEGRATION_DB_PASSWORD"
-export KEYCLOAK_REGISTRATION_CLIENT_SECRET="$INTEGRATION_DB_PASSWORD"
-docker compose --env-file .env.example -p siga-integration-tests -f compose.yaml up --build --abort-on-container-exit --exit-code-from integration-tests integration-tests
-docker compose --env-file .env.example -p siga-integration-tests -f compose.yaml down
-```
-
-Always execute teardown and preserve the first command's exit code. Run both
+Run both
 unit and integration suites before publishing images; `check` intentionally
 remains the unit/coverage gate and `integrationTest` is the separate database gate.
