@@ -30,8 +30,9 @@ JWT Authorization headers and original paths/query strings are preserved.
    If upgrading an existing `.env.production`, replace `TLS_CERTIFICATE_FILE` and
    `TLS_PRIVATE_KEY_FILE` with `LETSENCRYPT_DIRECTORY`. A domain change also needs
    matching `server_name`, redirect and certificate paths in `default.conf`.
-5. Publish the frontend/backend images to your Docker Hub repositories before
-   pulling them. This configuration does not publish images or set up a pipeline.
+5. Publish the frontend/backend images before pulling them, or configure the
+   [GitHub Actions workflow](../../.github/README.md), which tests, publishes and
+   deploys them. Initial server/schema preparation is still required once.
 
 Run all commands from the repository root. Use the same `-p siga-production` each
 time: the project name determines the persistent volume and network names.
@@ -121,5 +122,5 @@ The `upstream=` field records the backend IP handling each request; compare the
 three IPs with the backend containers on the Compose network. No debug endpoints
 or public backend ports are added.
 
-Swagger configuration, GitHub Actions, cloud resource creation, data migration
-and certificate issuance remain separate tasks.
+Swagger configuration, cloud resource creation, data migration and certificate
+issuance remain separate tasks.

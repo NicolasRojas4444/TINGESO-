@@ -1,0 +1,90 @@
+name: Publish and deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Never interrupt an in-progress deployment with a newer push.
+concurrency:
+  group: production-deployment
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/test.yml
+
+  publish:
+    needs: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Docker Hub configuration
+        env:
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          [[ "$DOCKERHUB_USERNAME" =~ ^[a-z0-9][a-z0-9_-]+$ ]] || { echo 'Set the DOCKERHUB_USERNAME repository variable.'; exit 1; }
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Publish backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: docker.io/${{ vars.DOCKERHUB_USERNAME }}/siga-backend:sha-${{ github.sha }}
+      - name: Publish frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: docker.io/${{ vars.DOCKERHUB_USERNAME }}/siga-frontend:sha-${{ github.sha }}
+
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      SSH_PORT: ${{ secrets.SSH_PORT }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
+      BACKEND_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/siga-backend:sha-${{ github.sha }}
+      FRONTEND_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME }}/siga-frontend:sha-${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure verified SSH access
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$SSH_HOST" =~ ^[a-zA-Z0-9][a-zA-Z0-9.-]*$ ]] || { echo 'Invalid SSH_HOST.'; exit 1; }
+          [[ "$SSH_USER" =~ ^[a-zA-Z_][a-zA-Z0-9_-]*$ ]] || { echo 'Invalid SSH_USER.'; exit 1; }
+          [[ "${SSH_PORT:-22}" =~ ^[0-9]+$ ]] || { echo 'Invalid SSH_PORT.'; exit 1; }
+          [[ "$DEPLOY_PATH" =~ ^/[a-zA-Z0-9_/-]+$ && "$DEPLOY_PATH" != / ]] || { echo 'DEPLOY_PATH must be an absolute directory without spaces.'; exit 1; }
+          test -n "$SSH_PRIVATE_KEY"
+          test -n "$SSH_KNOWN_HOSTS"
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/id_rsa ~/.ssh/known_hosts
+      - name: Send deployment configuration (no credentials)
+        run: |
+          set -euo pipefail
+          tar -czf deployment.tar.gz compose.production.yaml docker/nginx/default.conf docker/postgres/init-keycloak.sh docker/keycloak/siga-realm.json docker/keycloak/setup-registration.sh
+          scp -B -P "${SSH_PORT:-22}" -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 -i ~/.ssh/id_rsa deployment.tar.gz "$SSH_USER@$SSH_HOST:/tmp/siga-$GITHUB_SHA.tar.gz"
+      - name: Pull images and start production Compose
+        run: |
+          set -euo pipefail
+          ssh -p "${SSH_PORT:-22}" -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" "bash -s -- '$DEPLOY_PATH' '$GITHUB_SHA' '$BACKEND_IMAGE' '$FRONTEND_IMAGE'" < .github/scripts/deploy.sh
+      - name: Remove runner SSH credentials
+        if: always()
+        run: rm -f ~/.ssh/id_rsa ~/.ssh/known_hosts

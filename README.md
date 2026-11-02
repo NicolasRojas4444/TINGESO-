@@ -30,6 +30,8 @@ and the isolated PostgreSQL integration suite (18 business scenarios).
 
 For the standalone server configuration with Nginx, HTTPS and three backend
 replicas, see [deployment instructions](docker/nginx/README.md).
+For tests, Docker Hub publication and automatic SSH deployment through GitHub
+Actions (with manual deployment still available), see [workflow setup](.github/README.md).
 
 To explicitly import the three official curricula from the assignment and prepare
 the three selected local test accounts, see

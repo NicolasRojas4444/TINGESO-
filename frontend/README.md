@@ -124,5 +124,6 @@ The normal Compose service serves the compiled version; rebuild after UI edits.
 
 The normal Compose service is the local development baseline. For the separate
 server configuration with Nginx, HTTPS and three backend replicas, see
-[deployment instructions](../docker/nginx/README.md). CD and Docker Hub publication
-are separate steps.
+[deployment instructions](../docker/nginx/README.md). Tests, Docker Hub publication
+and optional automatic server deployment are documented in the
+[GitHub Actions setup](../.github/README.md).

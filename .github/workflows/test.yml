@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests and service coverage
+        run: docker build --progress plain -f backend/Dockerfile.test --output type=local,dest=backend/build/unit-test-artifacts backend
+      - name: PostgreSQL integration tests
+        shell: pwsh
+        run: ./backend/scripts/test-integration.ps1
+      - name: Upload backend reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            backend/build/unit-test-artifacts/reports/
+            backend/build/unit-test-artifacts/test-results/
+            backend/build/integration-test-artifacts/reports/
+            backend/build/integration-test-artifacts/test-results/
+          if-no-files-found: warn
+
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript, component tests, HTTP tests and SPA build
+        run: docker build --progress plain -t siga-frontend-check frontend
