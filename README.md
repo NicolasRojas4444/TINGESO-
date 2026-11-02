@@ -22,6 +22,9 @@ for API contracts and account lifecycle details.
 See [backend/TESTING.md](backend/TESTING.md) for the Docker unit/coverage checks
 and the standalone PostgreSQL integration suite (18 business scenarios).
 
+For the standalone server configuration with Nginx, HTTPS and three backend
+replicas, see [deployment instructions](docker/nginx/README.md).
+
 To explicitly import the three official curricula from the assignment and prepare
 the three selected local test accounts, see
 [docker/data-import/README.md](docker/data-import/README.md). This is never run by

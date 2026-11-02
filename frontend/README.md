@@ -122,5 +122,7 @@ For containerized development with HMR, build the `dependencies` stage and run
 Docker volume. Vite's `/config.json` reads public settings from the root `.env`.
 The normal Compose service serves the compiled version; rebuild after UI edits.
 
-This is a functional development baseline, not the final production deployment
-with Nginx, three backend replicas, HTTPS, CD and Docker Hub publication.
+The normal Compose service is the local development baseline. For the separate
+server configuration with Nginx, HTTPS and three backend replicas, see
+[deployment instructions](../docker/nginx/README.md). CD and Docker Hub publication
+are separate steps.
