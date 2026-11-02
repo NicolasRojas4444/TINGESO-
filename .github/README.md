@@ -3,8 +3,11 @@
 Pull requests to `main` run `test.yml`. A push to `main` (or a manual run of
 `deploy.yml` on `main`) runs the same tests, publishes both Docker Hub images only
 after all test jobs pass, then deploys that exact commit through verified SSH.
-The current GitHub runner builds Linux amd64 images; use an amd64 Ubuntu server.
-Nothing uses npm/PM2 on the server.
+Both images are published for Linux amd64 and arm64 under the same commit tag;
+Docker selects the correct variant for the server (including ARM64 Ubuntu).
+Build stages run natively and produce portable Java bytecode/static frontend
+assets; QEMU supports target-architecture runtime build steps. Nothing uses
+npm/PM2 on the server.
 
 ## GitHub configuration
 

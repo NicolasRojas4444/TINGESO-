@@ -1,4 +1,5 @@
-FROM node:24-alpine AS dependencies
+# Build/test static assets natively; only the runtime image needs the target CPU.
+FROM --platform=$BUILDPLATFORM node:24-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci

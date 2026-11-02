@@ -32,6 +32,9 @@ jobs:
         run: |
           [[ "$DOCKERHUB_USERNAME" =~ ^[a-z0-9][a-z0-9_-]+$ ]] || { echo '::error::Set DOCKERHUB_USERNAME in GitHub Actions Variables or Secrets (your Docker Hub username, e.g. donyetta). The .secrets file is not read by GitHub.'; exit 1; }
           test -n "$DOCKERHUB_TOKEN" || { echo '::error::Set DOCKERHUB_TOKEN in GitHub Actions Secrets to a Docker Hub access token with write permission. A local docker login does not authenticate the GitHub runner.'; exit 1; }
+      - uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -41,12 +44,14 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./backend
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: docker.io/${{ env.DOCKERHUB_USERNAME }}/siga-backend:sha-${{ github.sha }}
       - name: Publish frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: docker.io/${{ env.DOCKERHUB_USERNAME }}/siga-frontend:sha-${{ github.sha }}
 

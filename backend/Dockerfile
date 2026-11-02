@@ -1,4 +1,5 @@
-FROM eclipse-temurin:21.0.9_10-jdk-jammy AS build
+# Compile portable Java bytecode on the builder's native architecture.
+FROM --platform=$BUILDPLATFORM eclipse-temurin:21.0.9_10-jdk-jammy AS build
 WORKDIR /app
 COPY gradle gradle
 COPY gradlew build.gradle settings.gradle ./
