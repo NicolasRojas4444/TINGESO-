@@ -8,6 +8,12 @@ Configure the root `.env` using `.env.example`, then start the local stack:
 docker compose up --build -d --wait
 ```
 
+There are only two Compose files:
+
+- `compose.yaml`: development. Optional data import (`tools`) and isolated backend
+  tests (`integration`) run only when explicitly requested, not on normal startup.
+- `compose.production.yaml`: server deployment with Nginx and three backends.
+
 - Frontend: http://localhost:5173
 - Backend / API: http://localhost:8080
 - Keycloak: http://localhost:8081
@@ -20,7 +26,7 @@ walkthrough. See [backend/API_NOTES.md](backend/API_NOTES.md)
 for API contracts and account lifecycle details.
 
 See [backend/TESTING.md](backend/TESTING.md) for the Docker unit/coverage checks
-and the standalone PostgreSQL integration suite (18 business scenarios).
+and the isolated PostgreSQL integration suite (18 business scenarios).
 
 For the standalone server configuration with Nginx, HTTPS and three backend
 replicas, see [deployment instructions](docker/nginx/README.md).

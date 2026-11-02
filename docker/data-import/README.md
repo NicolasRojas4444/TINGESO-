@@ -3,6 +3,8 @@
 This is a one-off administrative import, not an application startup fixture,
 Spring profile or replacement authentication mechanism. Normal Compose startup
 does not run it. It never changes the master administrator or technical users.
+It is included in the development `compose.yaml` under the optional `tools` profile;
+explicitly targeting `academic-import` activates it without an extra Compose file.
 
 ## Catalog
 
@@ -40,13 +42,13 @@ Then run one of these **explicitly**:
 
 ```powershell
 # Catalog plus the three selected test accounts/profiles:
-docker compose -f compose.yaml -f compose.data.yaml run --build --rm --no-deps academic-import all
+docker compose run --build --rm --no-deps academic-import all
 
 # Catalog only; no account/password changes:
-docker compose -f compose.yaml -f compose.data.yaml run --build --rm --no-deps academic-import catalog
+docker compose run --build --rm --no-deps academic-import catalog
 
 # Accounts only, after the official catalog is present:
-docker compose -f compose.yaml -f compose.data.yaml run --build --rm --no-deps academic-import accounts
+docker compose run --build --rm --no-deps academic-import accounts
 ```
 
 The master administrator credentials must match the **existing** Keycloak master

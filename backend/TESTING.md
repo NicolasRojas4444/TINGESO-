@@ -43,15 +43,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File backend/scripts/test-integra
 ```
 
 This builds a Java 21 test runner and starts a dedicated PostgreSQL 17.6 container.
-The script generates an ephemeral database password in process environment only,
+The script generates an ephemeral database password in a temporary env file,
 returns the test exit code, and removes the test containers/network even on
 failure. PostgreSQL uses tmpfs (no persistent academic data), exposes no host port,
 and never shares the normal Compose network or database volume. The test-only
 Gradle cache volume may remain to speed up later runs.
 
-`compose.integration.yaml` is **standalone**: never combine it with `compose.yaml`.
-An explicit empty temporary env file prevents Compose from loading the application
-`.env`. No running backend or Keycloak is needed. Database URL checks
+Tests use the optional `integration` services in the development `compose.yaml`,
+under a separate project named `siga-integration-tests`. The runner targets only
+`integration-tests` and its test database dependency, never the application stack.
+Do not run `up` without that service name in the test project.
+The temporary env file is built from `.env.example` with disposable passwords;
+it is deleted on exit and prevents Compose from loading the application `.env`.
+No running backend or Keycloak is needed. Database URL checks
 run before Hibernate initializes its test schema; fixtures additionally verify
 the database name before clearing data between cases. Do not run the suite against
 an application database.
@@ -82,12 +86,18 @@ Reports (preserved even after test failures):
 - HTML: `backend/build/integration-test-artifacts/reports/tests/integrationTest/index.html`
 - JUnit XML: `backend/build/integration-test-artifacts/test-results/integrationTest/`
 
-For a Linux shell or a future CI runner, set a disposable
-`INTEGRATION_DB_PASSWORD`, then use:
+For a Linux shell or a future CI runner, use disposable variables. Application
+password variables only satisfy development Compose interpolation; no application
+containers are started by the following targeted command:
 
-```text
-docker compose --env-file /dev/null -p siga-integration-tests -f compose.integration.yaml up --build --abort-on-container-exit --exit-code-from integration-tests
-docker compose --env-file /dev/null -p siga-integration-tests -f compose.integration.yaml down
+```sh
+export INTEGRATION_DB_PASSWORD="$(openssl rand -hex 32)"
+export POSTGRES_PASSWORD="$INTEGRATION_DB_PASSWORD"
+export KEYCLOAK_DB_PASSWORD="$INTEGRATION_DB_PASSWORD"
+export KEYCLOAK_ADMIN_PASSWORD="$INTEGRATION_DB_PASSWORD"
+export KEYCLOAK_REGISTRATION_CLIENT_SECRET="$INTEGRATION_DB_PASSWORD"
+docker compose --env-file .env.example -p siga-integration-tests -f compose.yaml up --build --abort-on-container-exit --exit-code-from integration-tests integration-tests
+docker compose --env-file .env.example -p siga-integration-tests -f compose.yaml down
 ```
 
 Always execute teardown and preserve the first command's exit code. Run both

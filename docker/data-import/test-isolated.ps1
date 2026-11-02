@@ -14,7 +14,7 @@ try {
     $env:LOCAL_DATA_SETUP_ENABLED = 'true'
     docker compose up -d --wait --wait-timeout 240 backend
     if ($LASTEXITCODE -ne 0) { throw 'Isolated startup failed' }
-    docker compose -f compose.yaml -f compose.data.yaml run --build --rm --entrypoint node --env ISOLATED_DATA_IMPORT_TEST=true academic-import tests/integration.mjs
+    docker compose -f compose.yaml run --build --rm --entrypoint node --env ISOLATED_DATA_IMPORT_TEST=true academic-import tests/integration.mjs
     if ($LASTEXITCODE -ne 0) { throw 'Data import integration checks failed' }
 } finally {
     # The unique project is disposable; main volumes are never targeted.
