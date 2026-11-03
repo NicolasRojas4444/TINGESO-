@@ -91,6 +91,9 @@ ADMIN can create Keycloak accounts and academic profiles directly from
 Public registration stays disabled; the Compose startup command is unchanged.
 The login screens display **SIGA IPT**; Keycloak remains the internal identity
 provider, with the display name applied automatically to new and existing realms.
+An optional [demo data loader](docker/data-import/DEMO.md) prepares separate
+`admin`, `teacher` and `student` demo accounts plus a test academic scenario
+locally or on the server. It never runs at normal startup or resets existing data.
 
 See [backend/TESTING.md](backend/TESTING.md) for the Docker unit/coverage checks
 and the isolated PostgreSQL integration suite (18 business scenarios).
