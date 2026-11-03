@@ -1,5 +1,7 @@
 {
   "realm": "siga",
+  "displayName": "SIGA IPT",
+  "displayNameHtml": "SIGA IPT",
   "enabled": true,
   "registrationAllowed": false,
   "roles": {"realm": [{"name": "ADMIN"}, {"name": "TEACHER"}, {"name": "STUDENT"}]},

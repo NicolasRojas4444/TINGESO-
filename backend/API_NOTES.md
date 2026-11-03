@@ -1,16 +1,58 @@
 # Frontend-facing API updates
 
+## OpenAPI / Swagger
+
+- Local UI: `http://localhost:8080/api/swagger-ui.html` (use your configured backend port).
+- Server UI: `https://sigarojas.duckdns.org/api/swagger-ui.html`.
+- OpenAPI JSON: `/api/v3/api-docs` on the same backend/public origin.
+
+The documentation is readable without login; business endpoints still enforce
+JWT authentication, realm roles and ownership. Swagger groups the existing API
+by domain and describes its request/response schemas and business error contract.
+
+To use **Try it out**, sign in to the normal application with a SIGA account.
+In the browser developer tools, select an API request in Network and copy your
+own access token from its Authorization request header. In Swagger, click
+**Authorize** and paste only the JWT, without `Bearer `. Use a token from the
+`siga` realm, not the Keycloak master administration token. Do not share tokens;
+obtain a fresh token from your session when it expires. No additional login client,
+password grant or client secret is needed for Swagger.
+
+The OpenAPI server and UI configuration URLs are relative to the current origin,
+so requests keep HTTPS behind Nginx and use the same paths as local development.
+All documentation resources live under `/api/`, which Nginx already proxies;
+no Nginx configuration change or separate documentation service is needed.
+After deploying these changes, the existing Compose startup command is unchanged.
+
 ## Public registration catalog
 
 `GET /api/public/degree-programs` requires no token and returns only `id`, `code`
 and `name`. It includes ACTIVE programs with exactly one CURRENT study plan.
 No other academic or administrative endpoint becomes public.
 
-`SELF_REGISTRATION_ENABLED` controls all public registration.
-`TEACHER_SELF_REGISTRATION_ENABLED` additionally controls public TEACHER registration.
-The existing `.env` enables both for the requested development workflow; the example
-disables teacher registration. ADMIN cannot be requested through registration.
-Neither flag grants roles to an existing account.
+Public registration is disabled in both Compose configurations. Account creation
+is available only from the administrator's student and teacher forms.
+
+## Administrator account creation
+
+`POST /api/users` requires an authenticated ADMIN. The frontend sends username,
+password, RUN, full name and email, plus `role` (`STUDENT` or `TEACHER`). Students
+require `degreeProgramId`; teachers require `professionalTitle` and `academicDegree`.
+The password must contain 8–128 characters and is sent only to Keycloak, never
+stored in the application database or returned by the API. ADMIN accounts cannot
+be created through this operation.
+
+The backend creates the Keycloak account and its academic role, saves the linked
+profile, then enables the account. Students start REGULAR with the current plan;
+teachers start ACTIVE. No enrollment is created. If profile persistence fails,
+the backend attempts to remove the newly created Keycloak account. Duplicate
+usernames/emails and invalid academic data are reported without showing credentials.
+
+In the frontend, ADMIN uses **Estudiantes → Nuevo estudiante** or
+**Docentes → Nuevo docente**. No Keycloak ID or manual console operation is required.
+The existing Compose initialization configures the technical Keycloak account
+automatically, including on existing database volumes. No new environment
+variables or startup steps are needed: `docker compose up --build -d`.
 
 ## Account lifecycle
 
@@ -56,11 +98,11 @@ Student recovery uses the selected ACTIVE program's CURRENT plan, starts REGULAR
 and does not create enrollment. Teacher recovery starts ACTIVE. The original
 profile was eligible for physical deletion, so it had no protected history to restore.
 
-Administrative student/teacher creation validates that the submitted Keycloak
+The existing profile-only student/teacher API validates that the submitted Keycloak
 subject exists, is enabled and already has the requested effective realm role
 before saving any identity/profile. Missing accounts return 404, disabled accounts
-409 and missing roles 400. Public registration bypasses this check only for its
-newly created disabled account, which is enabled after profile persistence.
+409 and missing roles 400. Account creation through `POST /api/users` instead uses
+its newly created disabled account, enabled after profile persistence.
 
 Active retained identities use separate ADMIN-only endpoints:
 

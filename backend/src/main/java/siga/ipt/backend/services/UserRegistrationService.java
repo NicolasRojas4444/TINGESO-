@@ -23,6 +23,7 @@ public class UserRegistrationService {
     private final StudentService students;
     private final TeacherService teachers;
     private final EntityManager entityManager;
+    private final CurrentUserService currentUser;
 
     @Value("${app.registration.enabled}")
     private boolean enabled;
@@ -35,10 +36,21 @@ public class UserRegistrationService {
         if (!enabled) {
             throw new AccessDeniedException("Public registration is disabled");
         }
-        validateRequest(request);
-        if (request.role() == SelfRegistrationRole.TEACHER && !teacherEnabled) {
+        if (request != null && request.role() == SelfRegistrationRole.TEACHER && !teacherEnabled) {
             throw new AccessDeniedException("Public teacher registration is disabled");
         }
+
+        return provision(request);
+    }
+
+    @Transactional
+    public UserRegistrationResponse registerByAdmin(UserRegistrationRequest request) {
+        currentUser.requireRole("ADMIN");
+        return provision(request);
+    }
+
+    private UserRegistrationResponse provision(UserRegistrationRequest request) {
+        validateRequest(request);
 
         String subject = keycloak.createAccount(request);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

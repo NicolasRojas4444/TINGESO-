@@ -1,8 +1,10 @@
 import type { Program, Student } from "../../lib/types";
 import { studentService } from "../../service/studentService";
-import { number, userInput } from "../../utils/form";
+import { userInput } from "../../utils/form";
 import { Field, FormPanel } from "../ui";
 import { UserFields } from "./UserFields";
+import { AccountFields } from "./AccountFields";
+import { accountService } from "../../service/accountService";
 
 export function StudentForm({
   student,
@@ -22,15 +24,12 @@ export function StudentForm({
       submit={async (form) => {
         const user = userInput(form);
         if (student) await studentService.update(student.id, { user });
-        else
-          await studentService.create({
-            user,
-            degreeProgramId: number(form, "degreeProgramId"),
-          });
+        else await accountService.create(form, "STUDENT");
         saved();
       }}
     >
-      <UserFields user={student?.user} creating={!student} />
+      <UserFields user={student?.user} />
+      {!student && <AccountFields />}
       {!student && (
         <Field label="Carrera">
           <select name="degreeProgramId" required defaultValue="">

@@ -1,5 +1,7 @@
 package siga.ipt.backend.controllers;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +21,7 @@ import siga.ipt.backend.services.CurrentUserService;
 import siga.ipt.backend.services.StudentService;
 
 @RestController
+@Tag(name = "Students", description = "ADMIN manages profiles, academic status and plan assignment. STUDENT reads only their own profile and history.")
 @RequestMapping("/api/students")
 @RequiredArgsConstructor
 public class StudentController {

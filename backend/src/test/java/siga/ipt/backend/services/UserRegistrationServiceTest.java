@@ -47,6 +47,26 @@ class UserRegistrationServiceTest extends ServiceTestSupport {
     }
 
     @Test
+    void administratorCreatesAccountsEvenWhenPublicRegistrationIsDisabled() {
+        ReflectionTestUtils.setField(service, "enabled", false);
+        ReflectionTestUtils.setField(service, "teacherEnabled", false);
+        UserRegistrationRequest request = valid(SelfRegistrationRole.TEACHER);
+        when(keycloak.createAccount(request)).thenReturn("keycloak-subject");
+        TeacherDto profile = mapper.toDto(teacher());
+        when(teachers.createRegisteredProfile(any())).thenReturn(profile);
+        assertEquals(1L, service.registerByAdmin(request).teacherId());
+        verify(currentUser).requireRole("ADMIN");
+        verify(keycloak).enableAccount("keycloak-subject");
+    }
+
+    @Test
+    void nonAdministratorCannotProvisionAccounts() {
+        doThrow(new AccessDeniedException("ADMIN required")).when(currentUser).requireRole("ADMIN");
+        assertThrows(AccessDeniedException.class, () -> service.registerByAdmin(valid(SelfRegistrationRole.STUDENT)));
+        verifyNoInteractions(keycloak, students, teachers, entityManager);
+    }
+
+    @Test
     void createsAStudentProfileAndEnablesTheKeycloakAccountOnlyAfterFlushing() {
         UserRegistrationRequest request = valid(SelfRegistrationRole.STUDENT);
         when(keycloak.createAccount(request)).thenReturn("keycloak-subject");

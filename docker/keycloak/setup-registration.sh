@@ -13,6 +13,11 @@ cli config credentials \
   --user "$KEYCLOAK_ADMIN" \
   --password "$KEYCLOAK_ADMIN_PASSWORD"
 
+# Apply the login name to existing realms too; imports do not overwrite them.
+cli update "realms/$KEYCLOAK_REALM" \
+  -s 'displayName=SIGA IPT' \
+  -s 'displayNameHtml=SIGA IPT'
+
 client_id=$(cli get clients -r "$KEYCLOAK_REALM" \
   -q clientId=siga-backend-registration --fields id --format csv --noquotes)
 client_id=${client_id//$'\r'/}

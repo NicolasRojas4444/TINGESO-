@@ -29,10 +29,10 @@ export default function LoginView() {
           instituto.
         </p>
         {!auth.ready ? (
-          <p role="status">Conectando con Keycloak…</p>
+          <p role="status">Conectando con SIGA IPT…</p>
         ) : auth.error ? (
           <>
-            <Notice>{auth.error}</Notice>
+            <Notice>No se pudo conectar con SIGA IPT. Inténtalo nuevamente.</Notice>
             <button onClick={() => window.location.reload()}>
               Reintentar conexión
             </button>
@@ -40,17 +40,17 @@ export default function LoginView() {
         ) : auth.authenticated ? (
           <>
             <Notice>
-              Tu cuenta no tiene un rol académico asignado. Solicita a ADMIN que
-              la revise en Keycloak.
+              Tu cuenta no tiene un rol académico asignado. Contacta al
+              administrador de SIGA IPT.
             </Notice>
             <button onClick={auth.logout}>Cerrar sesión</button>
           </>
         ) : (
           <button className="primary" onClick={auth.login}>
-            Iniciar sesión con Keycloak
+            Iniciar sesión
           </button>
         )}
-        <small>Las credenciales se ingresan únicamente en Keycloak.</small>
+        <small>Acceso a SIGA IPT</small>
       </section>
     </main>
   );

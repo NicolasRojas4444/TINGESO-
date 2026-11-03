@@ -3,6 +3,8 @@ import { teacherService } from "../../service/teacherService";
 import { text, userInput } from "../../utils/form";
 import { FormPanel, TextField } from "../ui";
 import { UserFields } from "./UserFields";
+import { AccountFields } from "./AccountFields";
+import { accountService } from "../../service/accountService";
 
 export function TeacherForm({
   teacher,
@@ -24,11 +26,12 @@ export function TeacherForm({
           academicDegree: text(form, "academicDegree"),
         };
         if (teacher) await teacherService.update(teacher.id, body);
-        else await teacherService.create(body);
+        else await accountService.create(form, "TEACHER");
         saved();
       }}
     >
-      <UserFields user={teacher?.user} creating={!teacher} />
+      <UserFields user={teacher?.user} />
+      {!teacher && <AccountFields />}
       <TextField
         name="professionalTitle"
         label="Título profesional"

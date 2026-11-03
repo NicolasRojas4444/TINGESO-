@@ -1,5 +1,7 @@
 package siga.ipt.backend.controllers;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import siga.ipt.backend.dtos.DegreeProgramDto;
 import siga.ipt.backend.services.DegreeProgramService;
 
 @RestController
+@Tag(name = "Degree programs", description = "Academic degree programs and active status. ADMIN manages programs; academic read access is role-restricted.")
 @RequestMapping("/api/degree-programs")
 @RequiredArgsConstructor
 public class DegreeProgramController {

@@ -70,6 +70,15 @@ rejections for each of three processes), plus that smoke test:
 | Final grades | Record passing boundary 4.0; record failing 3.9; update an existing grade to 7.0 | Another teacher; out-of-range grade; update after actual period closing |
 | Academic closing | Consolidate immutable snapshots while keeping REGULAR; graduate after all courses pass; eliminate after a second failure while retaining history | Missing grades with incomplete section IDs; non-ADMIN caller; repeated closing without duplicated history |
 
+Four additional documentation tests check Swagger UI/assets, the generated
+OpenAPI/JWT contract, public-operation security metadata, and that business
+authentication/roles remain enforced. These do not replace the 18 business cases.
+
+Four account-creation integration tests cover ADMIN student/teacher provisioning,
+anonymous/non-ADMIN/public registration rejection, and compensation of Keycloak
+creation when the academic identity is duplicated. Only the external Keycloak
+client is mocked in these tests; security, transactions and PostgreSQL are real.
+
 All cases use real Spring controllers, exception handling, security filters,
 services, JPA repositories, transactions and PostgreSQL. Requests use MockMvc,
 not a real HTTP socket. Tests do not wrap requests in a test transaction, so

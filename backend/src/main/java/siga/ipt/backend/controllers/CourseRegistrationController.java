@@ -1,5 +1,8 @@
 package siga.ipt.backend.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,7 @@ import siga.ipt.backend.dtos.SectionDto;
 import siga.ipt.backend.services.CourseRegistrationService;
 
 @RestController
+@Tag(name = "Registrations", description = "STUDENT changes only their own registrations. ADMIN may consult students; responsible teachers may consult their section rosters. Enrollment is supplied outside this application.")
 @RequestMapping("/api/registrations")
 @RequiredArgsConstructor
 public class CourseRegistrationController {
@@ -44,6 +48,8 @@ public class CourseRegistrationController {
     }
 
     @PostMapping
+    @Operation(summary = "Register selected sections",
+            description = "Own STUDENT profile only, REGULAR and enrolled in an OPEN period. Validates plan, prerequisites, seats, schedules, earlier-semester priority and a final load of 3–6 courses (exception when fewer than three remain). The body is an array of objects containing sectionId.")
     @ResponseStatus(HttpStatus.CREATED)
     public List<CourseRegistrationDto> register(
             @RequestParam Long studentId,
@@ -62,6 +68,8 @@ public class CourseRegistrationController {
     }
 
     @PutMapping
+    @Operation(summary = "Replace the complete registration selection",
+            description = "Own STUDENT profile only. Submit the complete desired sectionIds list. Validation is atomic; unchanged registrations keep their dates and grades, removed ones are cancelled and lose provisional grades.")
     public List<CourseRegistrationDto> replaceSelection(
             @RequestParam Long studentId,
             @RequestParam Long periodId,
@@ -71,6 +79,8 @@ public class CourseRegistrationController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "Cancel a registration",
+            description = "Owning STUDENT only, while the period is OPEN. Validates remaining load and earlier-semester priority, releases the seat and removes any provisional final grade.")
     public CourseRegistrationDto cancel(@PathVariable Long id) {
         return service.cancel(id);
     }

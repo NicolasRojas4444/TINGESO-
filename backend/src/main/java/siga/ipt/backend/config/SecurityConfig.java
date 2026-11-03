@@ -20,6 +20,8 @@ public class SecurityConfig {
         return http.cors(cors -> {}).csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.GET, "/api/swagger-ui.html", "/api/swagger-ui/**",
+                                "/api/v3/api-docs", "/api/v3/api-docs/**", "/api/v3/api-docs.yaml").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public/degree-programs").permitAll()
                         .anyRequest().authenticated())

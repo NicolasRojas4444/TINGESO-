@@ -1,5 +1,7 @@
 package siga.ipt.backend.controllers;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import siga.ipt.backend.dtos.StudyPlanDto;
 import siga.ipt.backend.services.StudyPlanService;
 
 @RestController
+@Tag(name = "Study plans", description = "ADMIN manages plan versions and the single current plan per program. Students retain their assigned plan when a new plan becomes current.")
 @RequestMapping("/api/study-plans")
 @RequiredArgsConstructor
 public class StudyPlanController {

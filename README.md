@@ -84,6 +84,13 @@ areas; it does not create demo accounts or enrollment on startup.
 See [frontend/README.md](frontend/README.md) for account preparation, the academic
 walkthrough. See [backend/API_NOTES.md](backend/API_NOTES.md)
 for API contracts and account lifecycle details.
+Swagger UI is available at `/api/swagger-ui.html` on the backend/public server;
+see [API documentation usage](backend/API_NOTES.md#openapi--swagger).
+ADMIN can create Keycloak accounts and academic profiles directly from
+**Estudiantes → Nuevo estudiante** and **Docentes → Nuevo docente**.
+Public registration stays disabled; the Compose startup command is unchanged.
+The login screens display **SIGA IPT**; Keycloak remains the internal identity
+provider, with the display name applied automatically to new and existing realms.
 
 See [backend/TESTING.md](backend/TESTING.md) for the Docker unit/coverage checks
 and the isolated PostgreSQL integration suite (18 business scenarios).

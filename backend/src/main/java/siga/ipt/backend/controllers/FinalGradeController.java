@@ -1,5 +1,8 @@
 package siga.ipt.backend.controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,6 +18,7 @@ import siga.ipt.backend.dtos.FinalGradeDto;
 import siga.ipt.backend.services.FinalGradeService;
 
 @RestController
+@Tag(name = "Final grades", description = "Only the responsible TEACHER may write grades for active registrations in OPEN periods. ADMIN can consult grades; STUDENT access is restricted to their own closed-period results.")
 @RequestMapping("/api/final-grades")
 @RequiredArgsConstructor
 public class FinalGradeController {
@@ -32,6 +36,8 @@ public class FinalGradeController {
     }
 
     @PostMapping("/by-registration/{id}")
+    @Operation(summary = "Record a final grade",
+            description = "Responsible TEACHER only. Accepts value between 1.0 and 7.0 with at most one decimal. A value of at least 4.0 is PASSED. One grade per active registration; period must be OPEN.")
     @ResponseStatus(HttpStatus.CREATED)
     public FinalGradeDto create(
             @PathVariable Long id,
@@ -41,6 +47,8 @@ public class FinalGradeController {
     }
 
     @PutMapping("/by-registration/{id}")
+    @Operation(summary = "Update a final grade",
+            description = "Responsible TEACHER only. Same range/precision rules as creation; the period must still be OPEN.")
     public FinalGradeDto update(
             @PathVariable Long id,
             @RequestBody FinalGradeDto data

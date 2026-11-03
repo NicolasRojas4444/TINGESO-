@@ -3,10 +3,8 @@ import { TextField } from "../ui";
 
 export function UserFields({
   user,
-  creating = false,
 }: {
   user?: Pick<User, "run" | "fullName" | "email" | "keycloakSubject">;
-  creating?: boolean;
 }) {
   return (
     <>
@@ -24,13 +22,6 @@ export function UserFields({
         value={user?.email}
         maxLength={254}
       />
-      {creating && (
-        <TextField
-          name="keycloakSubject"
-          label="ID de cuenta Keycloak (existente, habilitada y con el rol requerido)"
-          maxLength={255}
-        />
-      )}
     </>
   );
 }

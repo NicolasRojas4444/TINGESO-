@@ -1,5 +1,7 @@
 package siga.ipt.backend.controllers;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,6 +18,7 @@ import siga.ipt.backend.dtos.SectionDto;
 import siga.ipt.backend.services.SectionService;
 
 @RestController
+@Tag(name = "Sections", description = "ADMIN manages period offerings, responsible teachers, schedules and capacity. Reads enforce teacher ownership or student plan access; seat counts are server-calculated.")
 @RequestMapping("/api/sections")
 @RequiredArgsConstructor
 public class SectionController {
