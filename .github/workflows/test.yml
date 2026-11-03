@@ -31,6 +31,15 @@ jobs:
             backend/build/integration-test-artifacts/test-results/
           if-no-files-found: warn
 
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Automatic official demo, restart preservation and volume recreation
+        shell: pwsh
+        run: ./docker/data-import/test-startup.ps1 -DevelopmentOnly
+
   frontend:
     runs-on: ubuntu-latest
     timeout-minutes: 15

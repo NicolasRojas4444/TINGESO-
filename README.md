@@ -22,7 +22,7 @@ Compose automatically creates the Keycloak database if missing and runs one
 temporary backend to initialize/update the application schema before starting
 the normal backend(s). These setup containers exit successfully; no manual SQL,
 one-backend startup or changes between `update`/`validate` are required. Setup
-does not seed application users, enrollment or catalog.
+seeds the official catalog and demo scenario only when `DEMO_SETUP_ENABLED=true`.
 
 - Frontend: http://localhost:5173
 - Backend / API: http://localhost:8080
@@ -50,6 +50,8 @@ CORS_ALLOWED_ORIGINS=http://localhost:5173
 SELF_REGISTRATION_ENABLED=false
 TEACHER_SELF_REGISTRATION_ENABLED=false
 KEYCLOAK_REQUEST_TIMEOUT_SECONDS=10
+DEMO_SETUP_ENABLED=true
+DEMO_PASSWORD=tuki123
 ```
 
 On the server, use the same `.env` filename and add:
@@ -60,9 +62,11 @@ LETSENCRYPT_DIRECTORY=/etc/letsencrypt
 COMPOSE_FILE=compose.production.yaml
 COMPOSE_PROJECT_NAME=siga-production
 APP_PULL_POLICY=build
+DEMO_SETUP_ENABLED=true
+DEMO_PASSWORD=tuki123
 ```
 
-For manual source builds, `BACKEND_IMAGE` and `FRONTEND_IMAGE` are optional; remove
+For manual source builds, `BACKEND_IMAGE`, `FRONTEND_IMAGE` and `DATA_IMPORT_IMAGE` are optional; remove
 example values such as `sha-COMMIT_PUBLICADO`. Default local image names are used.
 Actions supplies exact published image tags and overrides `APP_PULL_POLICY=always`
 to use them without building on the server. Both paths use the same Compose setup
@@ -79,7 +83,7 @@ not in `.env` or `.secrets`. The integration runner generates temporary disposab
 settings itself; no additional environment configuration file is needed.
 
 Login is handled by Keycloak. The interface provides ADMIN, TEACHER and STUDENT
-areas; it does not create demo accounts or enrollment on startup.
+areas. Automatic demo accounts/enrollment require the explicit environment flag.
 
 See [frontend/README.md](frontend/README.md) for account preparation, the academic
 walkthrough. See [backend/API_NOTES.md](backend/API_NOTES.md)
@@ -91,9 +95,12 @@ ADMIN can create Keycloak accounts and academic profiles directly from
 Public registration stays disabled; the Compose startup command is unchanged.
 The login screens display **SIGA IPT**; Keycloak remains the internal identity
 provider, with the display name applied automatically to new and existing realms.
-An optional [demo data loader](docker/data-import/DEMO.md) prepares separate
-`admin`, `teacher` and `student` demo accounts plus a test academic scenario
-locally or on the server. It never runs at normal startup or resets existing data.
+The optional [automatic demo initializer](docker/data-import/DEMO.md) prepares
+`admin`, `teacher` and `student` (password from `DEMO_PASSWORD`) with all three
+official study plans, 72 courses, 75 prerequisites, enrollment and seven sections
+in period **2099-2**. Once initialized, restarts never reset passwords, catalog
+edits, grades or progress. `down -v` deletes all data; the next startup rebuilds
+only the initial demo when enabled, not the changes made during testing.
 
 See [backend/TESTING.md](backend/TESTING.md) for the Docker unit/coverage checks
 and the isolated PostgreSQL integration suite (18 business scenarios).
@@ -103,7 +110,6 @@ replicas, see [deployment instructions](docker/nginx/README.md).
 For tests, Docker Hub publication and automatic SSH deployment through GitHub
 Actions (with manual deployment still available), see [workflow setup](.github/README.md).
 
-To explicitly import the three official curricula from the assignment and prepare
-the three selected local test accounts, see
-[docker/data-import/README.md](docker/data-import/README.md). This is never run by
-normal startup and does not erase existing users or academic records.
+The [legacy development importer](docker/data-import/README.md) is still available
+for explicit catalog-only imports. Do not run its `all`/`accounts` modes on the
+automatic demo: they prepare different profiles and may reset their passwords.

@@ -41,8 +41,6 @@ export default function TeacherDetailView() {
                 <dd>
                   <Badge value={data.teacher.status} />
                 </dd>
-                <dt>ID Keycloak</dt>
-                <dd>{data.teacher.user.keycloakSubject}</dd>
               </dl>
             </section>
             <section className="panel">

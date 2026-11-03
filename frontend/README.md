@@ -1,7 +1,8 @@
 # SIGA IPT frontend
 
 Functional initial interface: React, Vite, React Router, TypeScript, Tailwind CSS,
-Axios and Keycloak. It uses real API responses, not startup/demo data.
+Axios and Keycloak. It uses real API responses; optional demo data is initialized
+by Compose in PostgreSQL/Keycloak, never fabricated inside the frontend.
 
 ## Start with Docker
 
@@ -17,7 +18,7 @@ Login uses the Keycloak page and authorization code flow with PKCE S256. Tokens
 stay in memory; Axios refreshes them before requests. No application passwords,
 client secrets or tokens are stored in localStorage/sessionStorage.
 
-The frontend Docker build runs TypeScript checks, 16 component/unit tests and
+The frontend Docker build runs TypeScript checks, 34 component/unit tests and
 two HTTP runtime tests before building the SPA. The final image runs as a
 non-root user and has no npm production dependencies.
 
@@ -80,6 +81,10 @@ Routes and menu options are role protected. Accounts with multiple roles can
 switch areas from the sidebar. Backend authorization remains authoritative.
 Failures are shown without losing the submitted form or desired registration
 selection. Missing-grade closing failures display the structured section IDs.
+User-facing screens use SIGA IPT branding without provider/server technology
+names, IAM subject IDs or raw exception traces. Integration details remain in
+the implementation and browser network tools; this is presentation cleanup, not
+a replacement for endpoint authentication and authorization.
 
 Course data and prerequisites are saved in two explicit steps: saving a course
 opens its prerequisite form. A prerequisite failure does not imply that the
@@ -87,30 +92,31 @@ previous course save was rolled back.
 
 ## Accounts and enrollment for manual testing
 
-Create ADMIN manually in Keycloak and assign the ADMIN realm role. To create an
-academic profile from ADMIN, first create the Keycloak account, enable it, assign
-STUDENT or TEACHER, and copy its user ID into the profile form. Administering
-passwords/roles is intentionally not part of this frontend.
+With `DEMO_SETUP_ENABLED=true` and `DEMO_PASSWORD` set in the root `.env`, the normal
+Compose startup creates `admin`, `teacher`, `student`, the three official study
+plans and the demo offering/enrollment in `2099-2`, only once. Subsequent starts
+preserve passwords and academic progress. See [automatic demo setup](../docker/data-import/DEMO.md).
 
-Alternatively, the backend's temporary public registration endpoint can create
-STUDENT/TEACHER accounts while its environment flags permit it. A public sign-up
-screen and account recovery/relinking screens are not included in this version.
+ADMIN creates new student/teacher accounts directly in the corresponding frontend
+forms; the backend provisions Keycloak and the linked profile. No manual user ID
+copy is needed. Public registration stays disabled in both Compose configurations.
+Account recovery/relinking screens are not included; their ADMIN API is available.
 
 Enrollment is external to SIGA IPT. A STUDENT must have a corresponding existing
 `enrollments` row to save a registration. Creating a profile does not enroll it.
 The UI displays the real backend rejection if enrollment is missing; it never
 bypasses this rule or adds fake enrollment automatically.
 
-The official 72-course catalog and the selected `admin`, `teacher`, `student`
-accounts can be prepared explicitly with the development-only
-[data import tool](../docker/data-import/README.md). This is not run at startup.
-The selected student's profile is linked to Analista Programador's plan 2021.3;
-other students keep their existing plans unless changed explicitly by ADMIN.
+The automatic demo imports the official 72-course catalog and associates the demo
+student with Analista Programador's plan 2021.3. Existing academic activity is never
+discarded to change a plan. The legacy development-only [data import tool](../docker/data-import/README.md)
+remains available for explicit catalog-only loads; do not mix its account-reset
+commands with the automatic demo.
 
 Suggested walkthrough:
 
 1. ADMIN creates a program, a current plan, courses and prerequisites.
-2. ADMIN creates academic profiles linked to enabled Keycloak accounts.
+2. ADMIN creates student/teacher accounts and profiles from their forms.
 3. ADMIN creates a period and sections with valid schedules and active teachers.
 4. Supply the external enrollment, then STUDENT selects available courses.
 5. TEACHER records final grades. ADMIN closes the period.

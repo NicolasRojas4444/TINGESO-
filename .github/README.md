@@ -1,9 +1,9 @@
 # Automated tests, publication and deployment
 
 Pull requests to `main` run `test.yml`. A push to `main` (or a manual run of
-`deploy.yml` on `main`) runs the same tests, publishes both Docker Hub images only
+`deploy.yml` on `main`) runs the same tests, publishes the Docker Hub images only
 after all test jobs pass, then deploys that exact commit through verified SSH.
-Both images are published for Linux amd64 and arm64 under the same commit tag;
+Backend, frontend and the data initializer are published for Linux amd64 and arm64 under the same commit tag;
 Docker selects the correct variant for the server (including ARM64 Ubuntu).
 Build stages run natively and produce portable Java bytecode/static frontend
 assets; QEMU supports target-architecture runtime build steps. Nothing uses
@@ -17,14 +17,14 @@ Repository variables:
 
 | Name | Value |
 |---|---|
-| `DOCKERHUB_USERNAME` | Docker Hub account owning `siga-backend` and `siga-frontend` |
+| `DOCKERHUB_USERNAME` | Docker Hub account owning `siga-backend`, `siga-frontend` and `siga-data-setup` |
 | `DEPLOY_PATH` | Existing absolute server directory, e.g. `/home/ubuntu/siga` (no spaces) |
 
 Repository secrets:
 
 | Name | Value |
 |---|---|
-| `DOCKERHUB_TOKEN` | Docker Hub access token with permission to publish both repositories |
+| `DOCKERHUB_TOKEN` | Docker Hub access token with permission to publish the three repositories |
 | `SSH_HOST` | Server IP or DNS hostname, without protocol or port |
 | `SSH_USER` | Server deployment user |
 | `SSH_PORT` | Optional SSH port; default 22 |
@@ -34,7 +34,7 @@ Repository secrets:
 `DOCKERHUB_USERNAME` may alternatively be a repository Secret with the same name.
 If both exist, the Variable takes precedence. For this account its value should
 be `donyetta`. `DOCKERHUB_TOKEN` must be a Docker Hub access token with write
-permission for both image repositories. A login performed on your PC/server does
+permission for the image repositories. A login performed on your PC/server does
 not authenticate the GitHub runner. An empty `.secrets` file is not the cause by
 itself: GitHub does not load that file at all.
 
@@ -67,9 +67,12 @@ that local file is ignored by Git and is not read by Actions.
    restoration and incompatible/destructive schema migrations remain deliberate
    administrative operations; take backups before updates.
 
-Each automatic deployment transfers only Compose, Nginx, the PostgreSQL init
-script, and the two Keycloak configuration files. It never transfers `.env`,
-certificates, the local database or test accounts, and never runs `down -v`.
+Each automatic deployment transfers Compose, Nginx, the PostgreSQL init script,
+the two Keycloak configuration files and the initializer source context. It never
+transfers `.env`, certificates or local database data, and never runs `down -v`.
+When the server `.env` enables `DEMO_SETUP_ENABLED=true`, the initializer creates
+the official demo only once. CI also tests restart preservation and recreation
+after removing uniquely named disposable test volumes.
 Nginx configuration/certificates are checked before updating services. Successful
 image tags are saved in the server `.env` for subsequent manual use.
 Extracted public configuration is set to mode 644 and its directories to 755 so
@@ -81,7 +84,8 @@ Actions uses the same startup dependency graph as manual execution, with
 It also saves `COMPOSE_FILE` and `COMPOSE_PROJECT_NAME` in `.env` after success.
 
 Image tags are `docker.io/<username>/siga-backend:sha-<full-commit-sha>` and
-`docker.io/<username>/siga-frontend:sha-<full-commit-sha>`. There is no ambiguous
+`docker.io/<username>/siga-frontend:sha-<full-commit-sha>` and
+`docker.io/<username>/siga-data-setup:sha-<full-commit-sha>`. There is no ambiguous
 `latest` tag. Failed tests prevent publication; failed publication prevents SSH
 deployment. Failed deployments fail the workflow; there is no automatic rollback.
 Read the logs and verify container health before retrying.

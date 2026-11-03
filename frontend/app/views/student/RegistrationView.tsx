@@ -56,9 +56,8 @@ export default function RegistrationView() {
                 </select>
               </Field>
               <p className="hint">
-                Debes estar matriculado en este período. La matrícula se carga
-                fuera del sistema. El backend valida cupos, horarios,
-                prerrequisitos y prioridad académica al guardar.
+                Debes estar matriculado en este período. Al guardar se verifican
+                los cupos, horarios, prerrequisitos y prioridad académica.
               </p>
             </section>
             {selectedPeriod ? (

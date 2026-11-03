@@ -7,6 +7,7 @@ deployment_path=${1:?Deployment directory required}
 revision=${2:?Commit SHA required}
 export BACKEND_IMAGE=${3:?Backend image required}
 export FRONTEND_IMAGE=${4:?Frontend image required}
+export DATA_IMPORT_IMAGE=${5:?Data initializer image required}
 export APP_PULL_POLICY=always
 export COMPOSE_FILE=compose.production.yaml
 export COMPOSE_PROJECT_NAME=siga-production
@@ -14,6 +15,7 @@ export COMPOSE_PROJECT_NAME=siga-production
 [[ "$revision" =~ ^[a-f0-9]{40}$ ]]
 [[ "$BACKEND_IMAGE" =~ ^docker[.]io/[a-z0-9_-]+/siga-backend:sha-$revision$ ]]
 [[ "$FRONTEND_IMAGE" =~ ^docker[.]io/[a-z0-9_-]+/siga-frontend:sha-$revision$ ]]
+[[ "$DATA_IMPORT_IMAGE" =~ ^docker[.]io/[a-z0-9_-]+/siga-data-setup:sha-$revision$ ]]
 
 cd "$deployment_path"
 test -f .env || { echo 'Prepare .env on the server first.'; exit 1; }
@@ -26,7 +28,7 @@ cleanup() {
 trap cleanup EXIT
 
 # --overwrite keeps mounted configuration file inodes intact for Nginx reload.
-# The archive contains only the five versioned deployment configuration files.
+# The archive contains deployment configuration and the initializer build context.
 # Public configuration must be readable by the non-root container users.
 # Keep the restrictive process umask for secrets and temporary files only.
 (umask 022; tar --overwrite -xzf "$archive")
@@ -35,6 +37,8 @@ chmod 644 compose.production.yaml docker/nginx/default.conf \
     docker/postgres/init-keycloak.sh docker/keycloak/siga-realm.json \
     docker/keycloak/setup-registration.sh
 chmod 600 .env
+find docker/data-import -type d -exec chmod 755 {} +
+find docker/data-import -type f -exec chmod 644 {} +
 
 compose() {
     docker compose --env-file .env "$@"
@@ -49,14 +53,16 @@ compose exec -T nginx nginx -s reload
 
 # Persist the successful release so a manual `up` uses the same image versions.
 temporary_env=$(mktemp "$deployment_path/.env.XXXXXX")
-awk -v backend="$BACKEND_IMAGE" -v frontend="$FRONTEND_IMAGE" '
+awk -v backend="$BACKEND_IMAGE" -v frontend="$FRONTEND_IMAGE" -v initializer="$DATA_IMPORT_IMAGE" '
     /^[[:space:]]*(export[[:space:]]+)?BACKEND_IMAGE[[:space:]]*=/ { next }
     /^[[:space:]]*(export[[:space:]]+)?FRONTEND_IMAGE[[:space:]]*=/ { next }
+    /^[[:space:]]*(export[[:space:]]+)?DATA_IMPORT_IMAGE[[:space:]]*=/ { next }
     /^[[:space:]]*(export[[:space:]]+)?COMPOSE_FILE[[:space:]]*=/ { next }
     /^[[:space:]]*(export[[:space:]]+)?COMPOSE_PROJECT_NAME[[:space:]]*=/ { next }
     { print }
     END {
         print "BACKEND_IMAGE=" backend; print "FRONTEND_IMAGE=" frontend
+        print "DATA_IMPORT_IMAGE=" initializer
         print "COMPOSE_FILE=compose.production.yaml"
         print "COMPOSE_PROJECT_NAME=siga-production"
     }

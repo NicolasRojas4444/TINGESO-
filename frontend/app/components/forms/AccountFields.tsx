@@ -4,8 +4,8 @@ export function AccountFields() {
   return (
     <>
       <p>
-        Se creará una cuenta en Keycloak con el rol correspondiente y su perfil
-        académico.
+        Se creará una cuenta de acceso a SIGA IPT con el rol correspondiente y su
+        perfil académico.
       </p>
       <Field label="Nombre de usuario">
         <input

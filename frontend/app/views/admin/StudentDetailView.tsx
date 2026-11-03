@@ -70,8 +70,6 @@ export default function StudentDetailView() {
                 <dd>
                   <Badge value={data.student.academicStatus} />
                 </dd>
-                <dt>ID Keycloak</dt>
-                <dd>{data.student.user.keycloakSubject}</dd>
               </dl>
             </section>
             {!["GRADUATED", "ELIMINATED"].includes(

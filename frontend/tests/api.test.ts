@@ -52,4 +52,19 @@ describe("API failures", () => {
     const original = new ApiError("expired", 401);
     expect(normalizeError(original)).toBe(original);
   });
+  it.each(["Keycloak rejected the account", "Backend unavailable", "frontend initialization failed"])(
+    "keeps technical provider details out of visible errors: %s",
+    (detail) => {
+      expect(errorMessage(new Error(detail))).not.toMatch(/keycloak|backend|frontend/i);
+      expect(normalizeError(failure(503, { detail })).message).not.toMatch(/keycloak|backend|frontend/i);
+      const structured = normalizeError(new ApiError(detail, 409, { code: "FINAL_GRADES_MISSING", sectionIds: [4] }));
+      expect(structured.message).not.toMatch(/keycloak|backend|frontend/i);
+      expect(structured.problem?.sectionIds).toEqual([4]);
+    },
+  );
+  it.each([500, 503])("does not expose internal failure details for HTTP %s", (status) => {
+    const error = normalizeError(failure(status, { detail: "Internal identity provider/database stack trace" }));
+    expect(error.message).not.toContain("stack trace");
+    expect(error.message).not.toContain("identity provider");
+  });
 });

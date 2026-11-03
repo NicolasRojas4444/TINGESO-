@@ -54,6 +54,13 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: docker.io/${{ env.DOCKERHUB_USERNAME }}/siga-frontend:sha-${{ github.sha }}
+      - name: Publish data initializer
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker/data-import
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: docker.io/${{ env.DOCKERHUB_USERNAME }}/siga-data-setup:sha-${{ github.sha }}
 
   deploy:
     needs: publish
@@ -66,6 +73,7 @@ jobs:
       DEPLOY_PATH: ${{ vars.DEPLOY_PATH }}
       BACKEND_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME || secrets.DOCKERHUB_USERNAME }}/siga-backend:sha-${{ github.sha }}
       FRONTEND_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME || secrets.DOCKERHUB_USERNAME }}/siga-frontend:sha-${{ github.sha }}
+      DATA_IMPORT_IMAGE: docker.io/${{ vars.DOCKERHUB_USERNAME || secrets.DOCKERHUB_USERNAME }}/siga-data-setup:sha-${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
       - name: Configure verified SSH access
@@ -87,12 +95,12 @@ jobs:
       - name: Send deployment configuration (no credentials)
         run: |
           set -euo pipefail
-          tar -czf deployment.tar.gz compose.production.yaml docker/nginx/default.conf docker/postgres/init-keycloak.sh docker/keycloak/siga-realm.json docker/keycloak/setup-registration.sh
+          tar -czf deployment.tar.gz compose.production.yaml docker/nginx/default.conf docker/postgres/init-keycloak.sh docker/keycloak/siga-realm.json docker/keycloak/setup-registration.sh docker/data-import
           scp -B -P "${SSH_PORT:-22}" -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 -i ~/.ssh/id_rsa deployment.tar.gz "$SSH_USER@$SSH_HOST:/tmp/siga-$GITHUB_SHA.tar.gz"
       - name: Pull images and start production Compose
         run: |
           set -euo pipefail
-          ssh -p "${SSH_PORT:-22}" -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" "bash -s -- '$DEPLOY_PATH' '$GITHUB_SHA' '$BACKEND_IMAGE' '$FRONTEND_IMAGE'" < .github/scripts/deploy.sh
+          ssh -p "${SSH_PORT:-22}" -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=20 -i ~/.ssh/id_rsa "$SSH_USER@$SSH_HOST" "bash -s -- '$DEPLOY_PATH' '$GITHUB_SHA' '$BACKEND_IMAGE' '$FRONTEND_IMAGE' '$DATA_IMPORT_IMAGE'" < .github/scripts/deploy.sh
       - name: Remove runner SSH credentials
         if: always()
         run: rm -f ~/.ssh/id_rsa ~/.ssh/known_hosts

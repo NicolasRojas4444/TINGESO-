@@ -104,7 +104,7 @@ export default function StudentsView() {
                         </button>
                         <ActionButton
                           danger
-                          confirm={`¿Eliminar el perfil de ${student.user.fullName}? El backend rechazará la operación si tiene actividad protegida.`}
+                          confirm={`¿Eliminar el perfil de ${student.user.fullName}? No se puede eliminar si tiene inscripciones o historial académico.`}
                           run={() => studentService.remove(student.id)}
                           onSuccess={() => {
                             setEditing(null);

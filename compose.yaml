@@ -110,6 +110,8 @@ services:
         condition: service_completed_successfully
       backend-schema:
         condition: service_completed_successfully
+      demo-bootstrap:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "bash", "-ec", "exec 3<>/dev/tcp/localhost/8080"]
       interval: 10s
@@ -154,6 +156,27 @@ services:
       retries: 10
       start_period: 10s
     networks: [siga]
+
+  demo-bootstrap:
+    build: ./docker/data-import
+    image: ${DATA_IMPORT_IMAGE:-siga-ipt-data-import:local}
+    entrypoint: ["node", "bootstrap.mjs"]
+    environment:
+      DEMO_SETUP_ENABLED: ${DEMO_SETUP_ENABLED:-false}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+      PGHOST: postgres
+      PGDATABASE: ${POSTGRES_DB:?Set POSTGRES_DB}
+      PGUSER: ${POSTGRES_USER:?Set POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+      KEYCLOAK_SERVER_URL: http://keycloak:8080
+      KEYCLOAK_REALM: siga
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:?Set KEYCLOAK_ADMIN}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      backend-schema:
+        condition: service_completed_successfully
+    networks: [siga]
+    restart: "no"
 
   # Explicit development tools. Neither profile runs during normal startup.
   academic-import:

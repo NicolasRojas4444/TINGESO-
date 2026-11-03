@@ -24,7 +24,7 @@ export function Sidebar({ role, roles }: { role: Role; roles: Role[] }) {
           ))}
         </div>
       )}
-      <p className="sidebar-note">Versión inicial · Datos reales del backend</p>
+      <p className="sidebar-note">SIGA IPT · Gestión académica</p>
     </aside>
   );
 }

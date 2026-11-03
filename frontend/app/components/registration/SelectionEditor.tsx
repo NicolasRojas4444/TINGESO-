@@ -45,8 +45,8 @@ export function SelectionEditor({
     <>
       <Notice kind="info">
         Selecciona entre 3 y 6 asignaturas. Si te quedan menos de tres para
-        completar el plan, el backend aplica la excepción. Desmarca y marca
-        alternativas antes de guardar para reemplazar tu selección completa.
+        completar el plan, podrás inscribir las pendientes disponibles. Desmarca
+        y marca alternativas antes de guardar para reemplazar tu selección completa.
       </Notice>
       <section className="panel">
         <div className="page-title">
