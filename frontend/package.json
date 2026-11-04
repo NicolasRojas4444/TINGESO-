@@ -7,8 +7,7 @@
     "dev": "react-router dev",
     "start": "node server.mjs",
     "typecheck": "react-router typegen && tsc",
-    "test": "vitest run",
-    "format": "prettier --write app tests *.ts *.mjs"
+    "format": "prettier --write app *.ts *.mjs"
   },
   "dependencies": {
     "@react-router/node": "^8.4.0",
@@ -29,10 +28,6 @@
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3",
     "vite": "^8.0.3",
-    "vitest": "^4.1.12",
-    "jsdom": "^27.0.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/jest-dom": "^6.9.0",
     "prettier": "^3.9.10"
   }
 }

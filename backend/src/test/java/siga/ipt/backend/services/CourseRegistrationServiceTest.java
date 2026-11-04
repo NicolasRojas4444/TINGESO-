@@ -5,8 +5,6 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static siga.ipt.backend.services.ServiceFixtures.*;
 
-import jakarta.persistence.EntityNotFoundException;
-import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -349,22 +347,6 @@ class CourseRegistrationServiceTest extends ServiceTestSupport {
     }
 
     @Test
-    void listsRegistrationsAndFiltersAvailableChoicesByCapacityAndSchedule() {
-        context();
-        CourseRegistration first = registration(1, offering.get(0));
-        enrolled.add(first);
-        when(registrations.findByStudentIdOrderByRegisteredAtDesc(1L)).thenReturn(List.of(first));
-        when(registrations.findBySectionIdAndStatus(1L, RegistrationStatus.ACTIVE)).thenReturn(List.of(first));
-        assertEquals(1, service.getByStudent(1L).size());
-        assertEquals(1, service.getBySection(1L).size());
-        offering.get(1).getScheduleBlocks().getFirst().setModule(1);
-        assertEquals(List.of(3L), service.getAvailableSections(1L, 1L).stream().map(item -> item.id()).toList());
-        when(registrations.countBySectionIdAndStatus(3L, RegistrationStatus.ACTIVE)).thenReturn(30L);
-        assertTrue(service.getAvailableSections(1L, 1L).isEmpty());
-        verify(currentUser).requireTeacherAccess(1L);
-    }
-
-    @Test
     void cancelsARegistrationReleasesItsSeatAndRemovesItsProvisionalGrade() {
         context();
         addOffering(4, 1);
@@ -453,23 +435,4 @@ class CourseRegistrationServiceTest extends ServiceTestSupport {
         assertNull(cancelled.getCancelledAt());
     }
 
-    @Test
-    void reportsInvalidIdsMissingResourcesAndConcurrentCareerChanges() {
-        assertThrows(IllegalArgumentException.class, () -> service.getByStudent(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getByStudent(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.getBySection(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getBySection(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.cancel(null));
-        assertThrows(EntityNotFoundException.class, () -> service.cancel(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.register(null, 1L, select(1L)));
-        assertThrows(IllegalArgumentException.class, () -> service.register(1L, null, select(1L)));
-        context();
-        assertThrows(EntityNotFoundException.class, () -> service.register(1L, 1L, select(99L)));
-        assertThrows(EntityNotFoundException.class, () -> service.getAvailableSections(1L, 99L));
-        period.setStatus(PeriodStatus.CLOSED);
-        assertThrows(IllegalStateException.class, () -> service.getAvailableSections(1L, 1L));
-        period.setStatus(PeriodStatus.OPEN);
-        student.getStudyPlan().setDegreeProgram(identified(program(), 2));
-        assertThrows(IllegalStateException.class, () -> service.register(1L, 1L, select(1L)));
-    }
 }

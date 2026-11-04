@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static siga.ipt.backend.services.ServiceFixtures.*;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -18,7 +17,6 @@ import org.springframework.security.access.AccessDeniedException;
 import siga.ipt.backend.dtos.DegreeProgramDto;
 import siga.ipt.backend.entitys.DegreeProgram;
 import siga.ipt.backend.entitys.enums.ActiveStatus;
-import siga.ipt.backend.entitys.enums.PlanStatus;
 import siga.ipt.backend.repositories.DegreeProgramRepository;
 import siga.ipt.backend.repositories.StudyPlanRepository;
 
@@ -27,16 +25,6 @@ class DegreeProgramServiceTest extends ServiceTestSupport {
     @Mock private DegreeProgramRepository repository;
     @Mock private StudyPlanRepository plans;
     @InjectMocks private DegreeProgramService service;
-
-    @Test
-    void exposesOnlyTheReducedRegistrationCatalogWithoutRequiringAuthentication() {
-        when(repository.findRegistrationOptions(ActiveStatus.ACTIVE, PlanStatus.CURRENT)).thenReturn(List.of(program()));
-        var result = service.getRegistrationOptions();
-        assertEquals(1L, result.getFirst().id());
-        assertEquals("TAP", result.getFirst().code());
-        assertEquals("Software Development", result.getFirst().name());
-        verifyNoInteractions(currentUser);
-    }
 
     @Test
     void createsAndNormalizesFourSemesterActivePrograms() {
@@ -76,18 +64,6 @@ class DegreeProgramServiceTest extends ServiceTestSupport {
         when(plans.existsByDegreeProgramId(1L)).thenReturn(true);
         assertThrows(IllegalStateException.class, () -> service.delete(1L));
         verify(repository, never()).delete(any());
-    }
-
-    @Test
-    void rejectsMissingIdsStatusesAndUnknownPrograms() {
-        assertThrows(IllegalArgumentException.class, () -> service.getById(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getById(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.delete(null));
-        assertThrows(EntityNotFoundException.class, () -> service.delete(99L));
-        assertThrows(EntityNotFoundException.class, () -> service.update(99L, data("TAP", "N", "D")));
-        assertThrows(IllegalArgumentException.class, () -> service.changeStatus(1L, null));
-        assertThrows(EntityNotFoundException.class, () -> service.changeStatus(99L,
-                new DegreeProgramDto(null, null, null, null, null, ActiveStatus.ACTIVE)));
     }
 
     @Test

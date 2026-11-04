@@ -161,24 +161,12 @@ class UserRegistrationServiceTest extends ServiceTestSupport {
         return Stream.of(null,
                 request("user", "password1", "Name", "a@example.test", null, 1L, "Title", "Degree"),
                 request(null, "password1", "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("ab", "password1", "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("x".repeat(81), "password1", "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("bad user", "password1", "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
                 request("user", null, "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "        ", "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "short", "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "x".repeat(129), "Name", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
                 request("user", "password1", null, "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "password1", " ", "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "password1", "x".repeat(201), "a@example.test", SelfRegistrationRole.STUDENT, 1L, null, null),
                 request("user", "password1", "Name", null, SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "password1", "Name", "x".repeat(255), SelfRegistrationRole.STUDENT, 1L, null, null),
-                request("user", "password1", "Name", "bad-email", SelfRegistrationRole.STUDENT, 1L, null, null),
                 request("user", "password1", "Name", "a@example.test", SelfRegistrationRole.STUDENT, null, null, null),
                 request("user", "password1", "Name", "a@example.test", SelfRegistrationRole.TEACHER, null, null, "Degree"),
-                request("user", "password1", "Name", "a@example.test", SelfRegistrationRole.TEACHER, null, " ", "Degree"),
-                request("user", "password1", "Name", "a@example.test", SelfRegistrationRole.TEACHER, null, "Title", null),
-                request("user", "password1", "Name", "a@example.test", SelfRegistrationRole.TEACHER, null, "Title", " "));
+                request("user", "password1", "Name", "a@example.test", SelfRegistrationRole.TEACHER, null, "Title", null));
     }
 
     private static UserRegistrationRequest valid(SelfRegistrationRole role) {

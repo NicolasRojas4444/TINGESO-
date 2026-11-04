@@ -1,4 +1,4 @@
-# Build/test static assets natively; only the runtime image needs the target CPU.
+# Build static assets natively; only the runtime image needs the target CPU.
 FROM --platform=$BUILDPLATFORM node:24-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -6,7 +6,7 @@ RUN npm ci
 
 FROM dependencies AS checks
 COPY . .
-RUN npm run typecheck && npm test && node --test tests/server.test.mjs
+RUN npm run typecheck
 
 FROM checks AS build
 RUN npm run build

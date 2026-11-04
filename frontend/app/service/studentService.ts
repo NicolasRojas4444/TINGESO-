@@ -3,9 +3,7 @@ import type { AcademicRecord, Student, User } from "../lib/types";
 import { programService } from "./programService";
 import { studyPlanService } from "./studyPlanService";
 
-export type UserInput = Pick<User, "run" | "fullName" | "email"> & {
-  keycloakSubject?: string;
-};
+export type UserInput = Pick<User, "run" | "fullName" | "email">;
 export interface StudentInput {
   user: UserInput;
   degreeProgramId?: number;
@@ -18,8 +16,6 @@ export const studentService = {
     get<Student>(`${url}/${id}`, signal),
   getHistory: (id: number, signal?: AbortSignal) =>
     get<AcademicRecord[]>(`${url}/${id}/history`, signal),
-  create: async (input: StudentInput) =>
-    (await api.post<Student>(url, input)).data,
   update: async (id: number, input: Pick<StudentInput, "user">) =>
     (await api.put<Student>(`${url}/${id}`, input)).data,
   changeStatus: async (id: number, academicStatus: string) =>

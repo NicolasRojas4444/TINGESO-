@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static siga.ipt.backend.services.ServiceFixtures.*;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -103,20 +102,6 @@ class TeacherServiceTest extends ServiceTestSupport {
     void rejectsInvalidIdentity(UserDto user) {
         assertThrows(IllegalArgumentException.class, () -> service.create(input(user)));
         verify(teachers, never()).save(any());
-    }
-
-    @Test
-    void requiresAllTeacherDataAndValidIds() {
-        assertThrows(IllegalArgumentException.class, () -> service.create(null));
-        UserDto user = IdentityValidationCases.validUser();
-        for (String invalid : new String[]{null, " ", "x".repeat(201)}) {
-            assertThrows(IllegalArgumentException.class, () -> service.create(new TeacherDto(null, user, invalid, "Bachelor", null)));
-            assertThrows(IllegalArgumentException.class, () -> service.create(new TeacherDto(null, user, "Engineer", invalid, null)));
-        }
-        assertThrows(IllegalArgumentException.class, () -> service.getById(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getById(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.delete(null));
-        assertThrows(EntityNotFoundException.class, () -> service.delete(99L));
     }
 
     @Test

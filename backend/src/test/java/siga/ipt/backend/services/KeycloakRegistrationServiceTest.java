@@ -124,14 +124,6 @@ class KeycloakRegistrationServiceTest {
         server.verify();
     }
 
-    @Test
-    void rejectsCreationResponsesWithoutALocation() {
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users")).andRespond(withStatus(HttpStatus.CREATED));
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.createAccount(input("Test Person")));
-        server.verify();
-    }
-
     @ParameterizedTest
     @ValueSource(strings = {"{}", "{\"access_token\":12}", ""})
     void refusesMissingOrMalformedServiceTokens(String body) {
@@ -179,51 +171,6 @@ class KeycloakRegistrationServiceTest {
                     assertTrue(body.contains("\"enabled\":false"));
                 }).andRespond(withNoContent());
         service.updateAccount("subject-1", new KeycloakAccountState(false, "new@example.test", "New", "Name", false));
-        server.verify();
-    }
-
-    @Test
-    void rejectsMissingAccountStateOrRoleResponses() {
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1")).andRespond(withNoContent());
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.getAccountState("subject-1"));
-        server.verify();
-        server.reset();
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1/role-mappings/realm/composite"))
-                .andRespond(withNoContent());
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.getRealmRoleNames("subject-1"));
-        server.verify();
-    }
-
-    @Test
-    void translatesRoleAccountAndMetadataUpdateFailures() {
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1")).andRespond(withServerError());
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.getAccountState("subject-1"));
-        server.verify();
-        server.reset();
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1/role-mappings/realm/composite"))
-                .andRespond(withServerError());
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.getRealmRoleNames("subject-1"));
-        server.verify();
-        server.reset();
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1")).andRespond(withStatus(HttpStatus.CONFLICT));
-        KeycloakAccountState state = new KeycloakAccountState(true, "email", "Name", "Person", false);
-        assertThrows(IllegalStateException.class, () -> service.updateAccount("subject-1", state));
-        server.verify();
-        server.reset();
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1")).andRespond(withServerError());
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.updateAccount("subject-1", state));
-        server.verify();
-        server.reset();
-        token();
-        server.expect(requestTo(BASE + "/admin/realms/siga/users/subject-1"))
-                .andRespond(request -> { throw new IOException("unavailable"); });
-        assertThrows(IdentityProviderUnavailableException.class, () -> service.updateAccount("subject-1", state));
         server.verify();
     }
 

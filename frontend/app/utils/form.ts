@@ -6,6 +6,5 @@ export function userInput(data: FormData) {
     run: text(data, "run"),
     fullName: text(data, "fullName"),
     email: text(data, "email"),
-    keycloakSubject: text(data, "keycloakSubject") || undefined,
   };
 }

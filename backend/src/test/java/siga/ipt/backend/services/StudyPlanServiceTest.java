@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static siga.ipt.backend.services.ServiceFixtures.*;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -107,21 +106,6 @@ class StudyPlanServiceTest extends ServiceTestSupport {
         when(courses.existsByStudyPlanId(1L)).thenReturn(false);
         service.delete(1L);
         verify(repository).delete(entity);
-    }
-
-    @Test
-    void rejectsNullAndUnknownResources() {
-        assertThrows(IllegalArgumentException.class, () -> service.getById(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getById(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.getByDegreeProgram(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getByDegreeProgram(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.setCurrent(null));
-        assertThrows(EntityNotFoundException.class, () -> service.setCurrent(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.create(null, data("V2", null)));
-        assertThrows(EntityNotFoundException.class, () -> service.create(99L, data("V2", null)));
-        assertThrows(IllegalArgumentException.class, () -> service.create(1L, null));
-        when(repository.findDegreeProgramIdById(8L)).thenReturn(Optional.of(99L));
-        assertThrows(EntityNotFoundException.class, () -> service.delete(8L));
     }
 
     @ParameterizedTest

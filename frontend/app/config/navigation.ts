@@ -11,6 +11,7 @@ export const navigation: Record<Role, [string, string][]> = {
   STUDENT: [
     ["/student/profile", "Mi información"],
     ["/student/plan", "Mi plan de estudios"],
+    ["/student/schedule", "Mis ramos y horario"],
     ["/student/registration", "Inscripción académica"],
     ["/student/history", "Historial académico"],
   ],

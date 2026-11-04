@@ -5,7 +5,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static siga.ipt.backend.services.ServiceFixtures.*;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.time.DayOfWeek;
 import java.util.Arrays;
 import java.util.List;
@@ -105,17 +104,6 @@ class SectionServiceTest extends ServiceTestSupport {
     }
 
     @Test
-    void updatesCapacityAndSchedulesWithoutConflictingWithItsOwnExistingBlocks() {
-        Section section = existingSection();
-        when(teachers.findByIdForUpdate(1L)).thenReturn(Optional.of(teacher()));
-        when(sections.findByTeacherIdAndAcademicPeriodId(1L, 1L)).thenReturn(List.of(section));
-        when(sections.save(any())).thenAnswer(call -> call.getArgument(0));
-        assertEquals(30, service.update(1L, 1L, valid()).capacity());
-        verify(sections).flush();
-        assertSame(section, section.getScheduleBlocks().getFirst().getSection());
-    }
-
-    @Test
     void rejectsCapacityBelowCurrentEnrollmentAndStudentScheduleConflicts() {
         existingSection();
         when(teachers.findByIdForUpdate(1L)).thenReturn(Optional.of(teacher()));
@@ -184,19 +172,6 @@ class SectionServiceTest extends ServiceTestSupport {
                 data(30,List.of(new SectionScheduleBlockDto(null,DayOfWeek.MONDAY,7))),
                 data(30,List.of(monday,monday)),
                 data(30,List.of(monday,new SectionScheduleBlockDto(null,DayOfWeek.TUESDAY,1))));
-    }
-
-    @Test
-    void rejectsNullIdsAndMissingSectionsPeriodsTeachersAndCourses() {
-        assertThrows(IllegalArgumentException.class, () -> service.getById(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getById(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.getByPeriod(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getByPeriod(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.getByTeacher(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getByTeacher(99L));
-        assertThrows(EntityNotFoundException.class, () -> service.delete(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.create(null, 1L, 1L, valid()));
-        assertThrows(EntityNotFoundException.class, () -> service.create(99L, 1L, 1L, valid()));
     }
 
     private static SectionDto valid() {

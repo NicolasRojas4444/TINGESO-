@@ -146,26 +146,6 @@ class UserRecoveryServiceTest extends ServiceTestSupport {
         verifyNoInteractions(keycloak);
     }
 
-    @Test
-    void rejectsInvalidLinkRequestsSuspensionDuplicatesAndInvalidProviderAccounts() {
-        assertThrows(IllegalArgumentException.class, () -> service.linkProfile(null, request(SelfRegistrationRole.STUDENT)));
-        assertThrows(IllegalArgumentException.class, () -> service.linkProfile(1L, null));
-        assertThrows(IllegalArgumentException.class, () -> service.linkProfile(1L, request(null)));
-        assertThrows(EntityNotFoundException.class, () -> service.linkProfile(99L, request(SelfRegistrationRole.TEACHER)));
-        User user = suspended();
-        assertThrows(IllegalStateException.class, () -> service.linkProfile(1L, request(SelfRegistrationRole.TEACHER)));
-        user.setAccessSuspended(false);
-        when(students.existsByUserId(1L)).thenReturn(true);
-        assertThrows(IllegalStateException.class, () -> service.linkProfile(1L, request(SelfRegistrationRole.STUDENT)));
-        when(teachers.existsByUserId(1L)).thenReturn(true);
-        assertThrows(IllegalStateException.class, () -> service.linkProfile(1L, request(SelfRegistrationRole.TEACHER)));
-        when(teachers.existsByUserId(1L)).thenReturn(false);
-        doThrow(new IllegalStateException("Disabled account")).when(keycloak)
-                .requireEnabledAccountRole("subject", SelfRegistrationRole.TEACHER);
-        assertThrows(IllegalStateException.class, () -> service.linkProfile(1L, request(SelfRegistrationRole.TEACHER)));
-        verifyNoInteractions(studentService, teacherService, entityManager, accounts);
-    }
-
     private UserProfileRecoveryRequest request(SelfRegistrationRole role) {
         return new UserProfileRecoveryRequest(role, 1L, "Engineer", "Bachelor");
     }

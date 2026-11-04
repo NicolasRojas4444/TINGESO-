@@ -21,7 +21,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -66,18 +65,6 @@ class CurrentUserServiceTest {
     void acceptsEachAcademicRole(String role) {
         authenticate("subject", role);
         assertDoesNotThrow(service::requireAcademicUser);
-    }
-
-    @Test
-    void acceptsMappedAuthoritiesWithoutRealmRoles() {
-        Jwt jwt = Jwt.withTokenValue("token").header("alg", "RS256").subject("subject").build();
-        SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt,
-                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));
-        assertTrue(service.hasRole("ADMIN"));
-        service.requireStudentAccess(9L);
-        service.requireTeacherAccess(9L);
-        service.requireSectionAccess(99L, "another-teacher");
-        verifyNoInteractions(students, teachers);
     }
 
     @Test

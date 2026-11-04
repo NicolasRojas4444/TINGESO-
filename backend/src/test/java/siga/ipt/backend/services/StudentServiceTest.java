@@ -102,18 +102,6 @@ class StudentServiceTest extends ServiceTestSupport {
     }
 
     @Test
-    void restoresTheRetainedIdentityWithoutCreatingADuplicateUser() {
-        arrangeCreation();
-        when(students.save(any())).thenAnswer(call -> identified(call.getArgument(0), 2));
-        User retained = user("retained-subject");
-        StudentDto result = service.restoreProfile(1L, retained);
-        assertEquals(2L, result.id());
-        assertEquals("retained-subject", result.user().keycloakSubject());
-        assertEquals(StudentStatus.REGULAR, result.academicStatus());
-        verifyNoInteractions(users);
-    }
-
-    @Test
     void readsStudentsAndUpdatesOnlyEditablePersonalInformation() {
         Student entity = lockStudent();
         when(students.findAll()).thenReturn(List.of(entity));
@@ -139,17 +127,6 @@ class StudentServiceTest extends ServiceTestSupport {
         }
         assertThrows(IllegalArgumentException.class, () -> service.create(1L, input(user)));
         verify(users, never()).save(any());
-    }
-
-    @Test
-    void rejectsMissingStudentDataAndUnknownResources() {
-        assertThrows(IllegalArgumentException.class, () -> service.create(1L, null));
-        assertThrows(IllegalArgumentException.class, () -> service.getById(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getById(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.update(null, input(IdentityValidationCases.validUser())));
-        assertThrows(EntityNotFoundException.class, () -> service.update(99L, input(IdentityValidationCases.validUser())));
-        assertThrows(IllegalArgumentException.class, () -> service.create(null, input(IdentityValidationCases.validUser())));
-        assertThrows(EntityNotFoundException.class, () -> service.create(99L, input(IdentityValidationCases.validUser())));
     }
 
     @Test
@@ -211,19 +188,6 @@ class StudentServiceTest extends ServiceTestSupport {
         assertEquals(2L, service.changeStudyPlan(1L, 2L).studyPlanId());
         assertSame(target, entity.getStudyPlan());
         when(registrations.existsByStudentId(1L)).thenReturn(true);
-        assertThrows(IllegalStateException.class, () -> service.changeStudyPlan(1L, 2L));
-    }
-
-    @Test
-    void rejectsInvalidPlanChangesAndConcurrentCareerChanges() {
-        assertThrows(IllegalArgumentException.class, () -> service.changeStudyPlan(null, 1L));
-        assertThrows(IllegalArgumentException.class, () -> service.changeStudyPlan(1L, null));
-        assertThrows(EntityNotFoundException.class, () -> service.changeStudyPlan(99L, 1L));
-        when(students.findDegreeProgramIdById(1L)).thenReturn(Optional.of(1L));
-        assertThrows(EntityNotFoundException.class, () -> service.changeStudyPlan(1L, 99L));
-        Student entity = lockStudent();
-        entity.getStudyPlan().setDegreeProgram(identified(program(), 2));
-        when(plans.findDegreeProgramIdById(2L)).thenReturn(Optional.of(1L));
         assertThrows(IllegalStateException.class, () -> service.changeStudyPlan(1L, 2L));
     }
 

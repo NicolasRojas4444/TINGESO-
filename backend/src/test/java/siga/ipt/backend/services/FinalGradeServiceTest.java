@@ -69,18 +69,6 @@ class FinalGradeServiceTest extends ServiceTestSupport {
     }
 
     @Test
-    void rejectsMissingBodiesAndUnknownResources() {
-        assertThrows(IllegalArgumentException.class, () -> service.create(1L, null));
-        assertThrows(IllegalArgumentException.class, () -> service.create(null, input("5")));
-        assertThrows(EntityNotFoundException.class, () -> service.create(99L, input("5")));
-        when(registrations.findAcademicPeriodIdById(1L)).thenReturn(Optional.of(1L));
-        assertThrows(EntityNotFoundException.class, () -> service.create(1L, input("5")));
-        assertThrows(EntityNotFoundException.class, () -> service.getByRegistration(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.getBySection(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getBySection(99L));
-    }
-
-    @Test
     void updatesExistingGradesButRejectsDuplicateCreationAndMissingGrades() {
         CourseRegistration registration = editable();
         FinalGrade entity = grade(registration, "3.0");

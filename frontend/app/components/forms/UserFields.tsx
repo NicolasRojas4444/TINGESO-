@@ -4,7 +4,7 @@ import { TextField } from "../ui";
 export function UserFields({
   user,
 }: {
-  user?: Pick<User, "run" | "fullName" | "email" | "keycloakSubject">;
+  user?: Pick<User, "run" | "fullName" | "email">;
 }) {
   return (
     <>

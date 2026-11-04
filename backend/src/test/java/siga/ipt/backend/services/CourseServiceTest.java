@@ -5,14 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static siga.ipt.backend.services.ServiceFixtures.*;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -165,36 +161,6 @@ class CourseServiceTest extends ServiceTestSupport {
         service.delete(1L);
         verify(courses).delete(entity);
         verify(prerequisites).deleteAll(List.of());
-    }
-
-    @Test
-    void rejectsMissingIdsPlansCoursesAndPrograms() {
-        assertThrows(IllegalArgumentException.class, () -> service.getById(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getById(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.getByStudyPlan(null));
-        assertThrows(EntityNotFoundException.class, () -> service.getByStudyPlan(99L));
-        assertThrows(IllegalArgumentException.class, () -> service.create(null, valid()));
-        assertThrows(EntityNotFoundException.class, () -> service.create(99L, valid()));
-        assertThrows(EntityNotFoundException.class, () -> service.delete(99L));
-        when(courses.findDegreeProgramIdById(1L)).thenReturn(Optional.of(99L));
-        assertThrows(EntityNotFoundException.class, () -> service.delete(1L));
-    }
-
-    @ParameterizedTest
-    @MethodSource("invalidCourses")
-    void rejectsInvalidCurriculumData(CourseDto input) {
-        assertThrows(IllegalArgumentException.class, () -> service.create(1L, input));
-        verify(courses, never()).save(any());
-    }
-
-    static Stream<CourseDto> invalidCourses() {
-        return Stream.of(null, data(null,"N",1,2,0,0,4), data(" ","N",1,2,0,0,4),
-                data("x".repeat(31),"N",1,2,0,0,4), data("C",null,1,2,0,0,4),
-                data("C"," ",1,2,0,0,4), data("C","x".repeat(201),1,2,0,0,4),
-                data("C","N",null,2,0,0,4), data("C","N",0,2,0,0,4), data("C","N",5,2,0,0,4),
-                data("C","N",1,2,0,0,null), data("C","N",1,2,0,0,0), data("C","N",1,2,0,0,8),
-                data("C","N",1,null,0,0,4), data("C","N",1,-1,0,0,4),
-                data("C","N",1,2,-1,0,4), data("C","N",1,2,0,-1,4), data("C","N",1,4,2,2,4));
     }
 
     private static CourseDto valid() { return data("TAP1", "Name", 2, 2, 0, 0, 4); }

@@ -56,6 +56,25 @@
   overflow-x: auto;
   margin: 0.75rem 0 1rem;
 }
+.weekly-schedule {
+  min-width: 760px;
+  table-layout: fixed;
+}
+.schedule-time,
+.schedule-course span {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.schedule-course {
+  padding: 0.65rem;
+  margin-bottom: 0.4rem;
+  border-left: 3px solid var(--color-info-text);
+  border-radius: 0.25rem;
+  background: var(--color-info-background);
+  overflow-wrap: anywhere;
+}
 table {
   width: 100%;
   border-collapse: collapse;

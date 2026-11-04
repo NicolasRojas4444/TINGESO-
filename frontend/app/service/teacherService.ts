@@ -13,8 +13,6 @@ export const teacherService = {
   getMe: (signal?: AbortSignal) => get<Teacher>(`${url}/me`, signal),
   getById: (id: number, signal?: AbortSignal) =>
     get<Teacher>(`${url}/${id}`, signal),
-  create: async (input: TeacherInput) =>
-    (await api.post<Teacher>(url, input)).data,
   update: async (id: number, input: TeacherInput) =>
     (await api.put<Teacher>(`${url}/${id}`, input)).data,
   changeStatus: async (id: number, status: string) =>

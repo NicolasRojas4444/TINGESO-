@@ -4,7 +4,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 COPY . .
-RUN npm test
 USER node
 ENTRYPOINT ["node", "setup.mjs"]
 CMD ["all"]

@@ -24,6 +24,7 @@ export default [
     route("student", "layouts/StudentLayout.tsx", [
       route("profile", "views/student/ProfileView.tsx"),
       route("plan", "views/student/PlanView.tsx"),
+      route("schedule", "views/student/ScheduleView.tsx"),
       route("registration", "views/student/RegistrationView.tsx"),
       route("history", "views/student/HistoryView.tsx"),
     ]),
